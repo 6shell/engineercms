@@ -171,37 +171,37 @@ func (c *ProjController) GetProjects() {
 				projid = strings.Replace(v[1], "/*", "", -1)
 				// strMap[path.Base(projid)] = path.Base(projid)
 				// tempstr := strings.Split(projid, "/")
-				// logs.Info(tempstr[0])
-				// logs.Info(tempstr[1])
 				if len(projid) > 0 && strings.Contains(projid, "/") {
 					strMap[strings.Split(projid, "/")[1]] = strings.Split(projid, "/")[1]
 				}
 			}
 			for _, v := range strMap {
-				// beego.Info(projids)
-				projectid, err := strconv.ParseInt(v, 10, 64)
-				if err != nil {
-					logs.Error(err)
+				if v != "onlyoffice" && v != "0" {
+					projectid, err := strconv.ParseInt(v, 10, 64)
+					if err != nil {
+						logs.Error(err)
+					}
+					aa := make([]Project1, 1)
+					aa[0].Id = projectid
+					project, err := models.GetProj(projectid)
+					if err != nil {
+						logs.Error(err)
+					} else {
+						aa[0].Code = project.Code
+						aa[0].Title = project.Title
+						// aa[0].Label = project.Label
+						aa[0].Principal = project.Principal
+						//根据项目id取得项目下所有成果数量
+						count, _, err := models.GetProjProducts(project.Id, 3)
+						if err != nil {
+							logs.Error(err)
+						}
+						aa[0].Number = count //len(products)
+						aa[0].Created = project.Created
+						aa[0].Updated = project.Updated
+						projects1 = append(projects1, aa...)
+					}
 				}
-				aa := make([]Project1, 1)
-				aa[0].Id = projectid
-				project, err := models.GetProj(projectid)
-				if err != nil {
-					logs.Error(err)
-				}
-				aa[0].Code = project.Code
-				aa[0].Title = project.Title
-				// aa[0].Label = project.Label
-				aa[0].Principal = project.Principal
-				//根据项目id取得项目下所有成果数量
-				count, _, err := models.GetProjProducts(project.Id, 3)
-				if err != nil {
-					logs.Error(err)
-				}
-				aa[0].Number = count //len(products)
-				aa[0].Created = project.Created
-				aa[0].Updated = project.Updated
-				projects1 = append(projects1, aa...)
 			}
 			// logs.Info(projects1)
 			count = int64(len(strMap))
@@ -420,33 +420,38 @@ func (c *ProjController) GetWxProjects() {
 				// tempstr := strings.Split(projid, "/")
 				// logs.Info(tempstr[0])
 				// logs.Info(tempstr[1])
-				strMap[strings.Split(projid, "/")[1]] = strings.Split(projid, "/")[1]
+				if len(projid) > 0 && strings.Contains(projid, "/") {
+					strMap[strings.Split(projid, "/")[1]] = strings.Split(projid, "/")[1]
+				}
 			}
 			for _, v := range strMap {
-				// beego.Info(projids)
-				projectid, err := strconv.ParseInt(v, 10, 64)
-				if err != nil {
-					logs.Error(err)
+				if v != "onlyoffice" && v != "0" {
+					// beego.Info(projids)
+					projectid, err := strconv.ParseInt(v, 10, 64)
+					if err != nil {
+						logs.Error(err)
+					}
+					aa := make([]Project1, 1)
+					aa[0].Id = projectid
+					project, err := models.GetProj(projectid)
+					if err != nil {
+						logs.Error(err)
+					} else {
+						aa[0].Code = project.Code
+						aa[0].Title = project.Title
+						// aa[0].Label = project.Label
+						aa[0].Principal = project.Principal
+						//根据项目id取得项目下所有成果数量
+						count, _, err := models.GetProjProducts(project.Id, 3)
+						if err != nil {
+							logs.Error(err)
+						}
+						aa[0].Number = count //len(products)
+						aa[0].Created = project.Created
+						aa[0].Updated = project.Updated
+						projects1 = append(projects1, aa...)
+					}
 				}
-				aa := make([]Project1, 1)
-				aa[0].Id = projectid
-				project, err := models.GetProj(projectid)
-				if err != nil {
-					logs.Error(err)
-				}
-				aa[0].Code = project.Code
-				aa[0].Title = project.Title
-				// aa[0].Label = project.Label
-				aa[0].Principal = project.Principal
-				//根据项目id取得项目下所有成果数量
-				count, _, err := models.GetProjProducts(project.Id, 3)
-				if err != nil {
-					logs.Error(err)
-				}
-				aa[0].Number = count //len(products)
-				aa[0].Created = project.Created
-				aa[0].Updated = project.Updated
-				projects1 = append(projects1, aa...)
 			}
 			// logs.Info(projects1)
 			count = int64(len(strMap))
@@ -1252,7 +1257,7 @@ func (c *ProjController) AddProjectCate() {
 		c.Data["json"] = map[string]interface{}{"data": "ok", "id": Id}
 		c.ServeJSON()
 	} else {
-		c.Data["json"] = map[string]interface{}{"data": "非管理员、非本人"}
+		c.Data["json"] = map[string]interface{}{"data": "非管理员，非本人，无权限！"}
 		c.ServeJSON()
 	}
 }
@@ -1314,7 +1319,7 @@ func (c *ProjController) UpdateProjectCate() {
 		c.Data["json"] = map[string]interface{}{"data": "ok", "id": id} //id //data
 		c.ServeJSON()
 	} else {
-		c.Data["json"] = map[string]interface{}{"data": "非管理员，非本人"}
+		c.Data["json"] = map[string]interface{}{"data": "非管理员，非本人，无权限！"}
 		c.ServeJSON()
 	}
 	// c.Data["IsProjects"] = true
@@ -1409,6 +1414,11 @@ func (c *ProjController) AddProject() {
 	projname := c.GetString("name")
 	projlabel := c.GetString("label")
 	principal := c.GetString("principal")
+	// 防止编号和名称中存在../../之类的目录，存入文件的时候会导致跨目录存储，路径遍历漏洞
+	projcode = filepath.Clean(projcode)
+	projcode = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projcode), string(filepath.Separator))
+	projname = filepath.Clean(projname)
+	projname = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projname), string(filepath.Separator))
 	//先保存项目名称到数据库，parentid为0，返回id作为下面二级三级四级……的parentid
 	//然后递归保存二级三级……到数据库
 	//最后递归生成硬盘目录
@@ -1487,6 +1497,11 @@ func (c *ProjController) AddProjTemplet() {
 	principal := c.GetString("principal")
 	projid := c.GetString("projid")
 	ispermission := c.GetString("ispermission")
+	// 防止编号和名称中存在../../之类的目录，存入文件的时候会导致跨目录存储，路径遍历漏洞
+	projcode = filepath.Clean(projcode)
+	projcode = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projcode), string(filepath.Separator))
+	projname = filepath.Clean(projname)
+	projname = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projname), string(filepath.Separator))
 	//code=sl123&name=dada&label=&principal=&projid=25001&ispermission=true
 	//先保存项目名称到数据库，parentid为0，返回id作为下面的parentid进行递归
 	//根据项目模板id，取出项目目录的json结构
@@ -1632,16 +1647,22 @@ func (c *ProjController) QuickAddWxProjTemplet() {
 			logs.Error(err)
 		}
 	} else {
-		// c.Data["json"] = map[string]interface{}{"data": "WRONG", "info": "用户未登录"}
-		// c.ServeJSON()
-		// return
-		user.Id = 9
+		c.Data["json"] = map[string]interface{}{"data": "WRONG", "info": "用户未登录"}
+		c.ServeJSON()
+		return
+		// user.Id = 9
 	}
 
 	projcode := c.GetString("projectcode")
 	projcode = template.HTMLEscapeString(projcode) //过滤xss攻击
 	projname := c.GetString("projecttitle")
 	projname = template.HTMLEscapeString(projname) //过滤xss攻击
+	// 防止遍历目录攻击
+	projcode = filepath.Clean(projcode)
+	projcode = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projcode), string(filepath.Separator))
+	projname = filepath.Clean(projname)
+	projname = strings.TrimPrefix(filepath.Join(string(filepath.Separator), projname), string(filepath.Separator))
+
 	tempprojid := c.GetString("tempprojid")
 	tempprojid = template.HTMLEscapeString(tempprojid) //过滤xss攻击
 	istemppermission := c.GetString("istemppermission")
@@ -2095,10 +2116,15 @@ func (c *ProjController) AddCalendar() {
 	pid, err := strconv.ParseInt(projectid, 10, 64)
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"data": "WRONG", "info": "字符转int64错误！", "error": "ERROR"}
+		c.ServeJSON()
+		return
 	}
 	// beego.Info(pid)
 	title := c.GetString("title")
+	title = template.HTMLEscapeString(title)
 	content := c.GetString("content")
+	content = template.HTMLEscapeString(content)
 	start := c.GetString("start")
 	end := c.GetString("end")
 	color := c.GetString("color")

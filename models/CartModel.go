@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//购物车表
+// 购物车表
 type Cart struct {
 	// gorm.Model
 	Id      int64     `json:"id"`
@@ -43,20 +43,20 @@ func CreateCart(productid, userid int64) (id int64, err error) {
 		return id, nil
 	} else if err == nil { //如果存在记录，或多于一条，则进行更新
 		// cart2 := &Cart{Id: cart.Id}
-		fmt.Printf("cart2.Updated")
+		// fmt.Printf("cart2.Updated")
 		cart.Updated = time.Now()
 		_, err = o.Update(&cart, "Updated")
 		if err != nil {
 			return cart.Id, err
-			fmt.Printf("heh")
+			// fmt.Printf("heh")
 		}
 		return cart.Id, nil
 	}
-	fmt.Printf("he")
+	// fmt.Printf("he")
 	return id, nil
 }
 
-//购物车表
+// 购物车表
 type UserCart struct {
 	// gorm.Model
 	Id int64 `json:"id"`
@@ -73,7 +73,7 @@ type UserCart struct {
 	TopProjectTitle string `json:"topprojecttitle"`
 }
 
-//查询待自己审批的记录
+// 查询待自己审批的记录
 func GetApprovalCart(uid int64, limit, offset, status int, searchText string, isadmin bool) (usercarts []UserCart, err error) {
 	//获取DB Where("product.title LIKE ?", "%searchText%").不对
 	//用"%"+searchText+"%"
@@ -111,7 +111,7 @@ func GetApprovalCart(uid int64, limit, offset, status int, searchText string, is
 	// db.Joins("JOIN pays ON pays.user_id = users.id", "jinzhu@example.org").Joins("JOIN credit_cards ON credit_cards.user_id = users.id").Where("user_id = ?", uid).Find(&pays)
 }
 
-//查询某个用户申请下载的记录
+// 查询某个用户申请下载的记录
 func GetApplyCart(uid int64, limit, offset, status int, searchText string, isadmin bool) (usercarts []UserCart, err error) {
 	//获取DB Where("product.title LIKE ?", "%searchText%").不对
 	//用"%"+searchText+"%"
@@ -184,7 +184,7 @@ func GetApplyCart(uid int64, limit, offset, status int, searchText string, isadm
 // 	return usercarts, err
 // }
 
-//查询待自己审批的记录总数
+// 查询待自己审批的记录总数
 func GetApprovalCartCount(uid int64, status int, searchText string, isadmin bool) (count int64, err error) {
 	//获取DB
 	db := _db //GetDB()
@@ -201,7 +201,7 @@ func GetApprovalCartCount(uid int64, status int, searchText string, isadmin bool
 	return count, err
 }
 
-//查询自己申请的记录总数
+// 查询自己申请的记录总数
 func GetApplyCartCount(uid int64, status int, searchText string, isadmin bool) (count int64, err error) {
 	//获取DB
 	db := _db //GetDB()
@@ -234,7 +234,7 @@ func GetApplyCartCount(uid int64, status int, searchText string, isadmin bool) (
 // 	return count, err
 // }
 
-//查询一个cart
+// 查询一个cart
 func GetUserCartbyId(id int64) (cart Cart, err error) {
 	//获取DB
 	db := _db //GetDB()
@@ -278,7 +278,7 @@ type ProjectPic struct {
 	Type      string `json:"type"`
 }
 
-//gorm批量插入——参考用，没有意义
+// gorm批量插入——参考用，没有意义
 func AddProjectPics(data []string, project_pic_type string, project_id int) bool {
 	sql := "INSERT INTO `project_pics` (`project_id`,`url`,`type`) VALUES "
 	// 循环data数组,组合sql语句

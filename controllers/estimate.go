@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -184,7 +185,10 @@ func (c *EstimateController) UploadExcelEstimate() {
 	// random_name
 	// newname := strconv.FormatInt(time.Now().UnixNano(), 10) + fileSuffix // + "_" + filename
 	// year, month, _ := time.Now().Date()
-	err = os.MkdirAll("./attachment/estimate/"+username+"/", 0777) //..代表本当前exe文件目录的上级，.表示当前目录，没有.表示盘的根目录
+	user_name := filepath.Clean(username)
+	clean_user_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), user_name), string(filepath.Separator))
+
+	err = os.MkdirAll("./attachment/estimate/"+clean_user_name+"/", 0777) //..代表本当前exe文件目录的上级，.表示当前目录，没有.表示盘的根目录
 	if err != nil {
 		logs.Error(err)
 	}
@@ -197,22 +201,26 @@ func (c *EstimateController) UploadExcelEstimate() {
 	if h != nil {
 		//保存附件——要防止重名覆盖！！！！先判断是否存在！！！
 		// filepath := "./attachment/excel/" + username + "/" + h.Filename
-		filepath := "./attachment/estimate/" + username + "/" + h.Filename
-		Url := "/attachment/estimate/" + username + "/"
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+		// file_path := "./attachment/carousel/" + clean_file_name
+
+		file_path := "./attachment/estimate/" + clean_file_name // username + "/" + h.Filename
+		Url := "/attachment/estimate/" + clean_user_name + "/"
 		// 如果文件存在，则返回
-		if PathisExist(filepath) {
+		if PathisExist(file_path) {
 			c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件已存在！"}
 			c.ServeJSON()
 			return
 		}
-		err = c.SaveToFile("input-ke-2[]", filepath) //.Join("attachment", attachment)) //存文件
+		err = c.SaveToFile("input-ke-2[]", file_path) //.Join("attachment", attachment)) //存文件
 		if err != nil {
 			logs.Error(err)
 			c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件保存错误！"}
 			c.ServeJSON()
 			return
 		}
-		filesize, _ = FileSize(h.Filename)
+		filesize, _ = FileSize(file_path)
 		filesize = filesize / 1000.0
 
 		matched, err := regexp.MatchString("\\.[x|X][l|L][s|S]*", fileext)
@@ -224,7 +232,7 @@ func (c *EstimateController) UploadExcelEstimate() {
 		}
 		if matched { //如果是temple文件，则解析，如果是pdf文件，则不解析
 			var estimateProjID, estimatePhaseID uint
-			f, err := excelize.OpenFile(filepath)
+			f, err := excelize.OpenFile(file_path)
 			if err != nil {
 				logs.Error(err)
 				c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "打开excel表格文件错误！"}

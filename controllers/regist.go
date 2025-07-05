@@ -202,7 +202,7 @@ func (c *RegistController) WxRegist() {
 			} else {
 				uid = strconv.FormatInt(user.Id, 10)
 			}
-			_, err = models.AddUserOpenID(user.Id, openID) // 20240728防止用id为0存入了数据库中
+			_, err = models.AddUserOpenID(user.Id, openID) // 20240728防止用id为0存入了数据库中;20250420如果openid存在，则更新openid对应的用户名
 			if err != nil {
 				logs.Error(err)
 			}

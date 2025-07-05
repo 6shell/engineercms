@@ -415,7 +415,8 @@ func (c *LoginController) Loginerr() {
 // @Failure 404 articl not found
 // @router /wxlogin/:id [get]
 // 微信小程序根据openid自动匹配用户名后登录。访问微信服务器获取用户信息
-// 如果 用户不存在，则提供openid给注册界面——wxregion
+// 如果 用户不存在，则提供openid给注册界面——
+// 真正使用的用户小程序登录是——WxRegist
 func (c *LoginController) WxLogin() {
 	id := c.Ctx.Input.Param(":id")
 	JSCODE := c.GetString("code")
@@ -1025,12 +1026,13 @@ func (c *ServiceValidateController) Get() {
 // @router /passlogin [get]
 // 微信小程序根据openid自动匹配用户名后登录。访问微信服务器获取用户信息
 // 如果 用户不存在，则提供openid给注册界面——wxregion
+// 真正使用的用户小程序登录是——WxRegist
 func (c *LoginController) PassLogin() {
 	// hotqinsessionid := c.GetString("hotqinsessionid")
 	var user models.User
 	var err error
 	openID := c.GetSession("openID")
-	logs.Info(openID)
+	// logs.Info(openID)
 	if openID != nil {
 		user, err = models.GetUserByOpenID(openID.(string))
 		if err != nil {

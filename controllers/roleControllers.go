@@ -461,6 +461,12 @@ func (c *RoleController) Get() {
 
 // 添加角色
 func (c *RoleController) Post() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	// u := m.Role{}
 	// if err := c.ParseForm(&u); err != nil {
 	// 	logs.Error(err.Error)
@@ -569,6 +575,12 @@ func (c *RoleController) Post() {
 // 添加用户角色
 // 先删除用户所有角色
 func (c *RoleController) UserRole() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	//要支持批量分配角色，循环用户id
 	uid := c.GetString("uid") //secofficeid
 	//先删除用户的权限
@@ -606,6 +618,12 @@ func (c *RoleController) UserRole() {
 // 给角色赋项目目录的权限
 // 先删除角色对于这个项目的所有权限
 func (c *RoleController) RolePermission() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	var success bool
 	var nodeidint int
 	var projurl, action, suf1, suf string
@@ -882,6 +900,12 @@ func (c *RoleController) GetRolePermission() {
 //	'200':
 //	  description: success
 func (c *RoleController) Delete() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	roleids := c.GetString("ids")
 	rolearray := strings.Split(roleids, ",")
 	for _, v1 := range rolearray {
@@ -926,6 +950,12 @@ func (c *RoleController) Delete() {
 //	'200':
 //	  description: success
 func (c *RoleController) Update() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	var role m.Role
 	roleid := c.GetString("roleid")
 	idNum, err := strconv.ParseInt(roleid, 10, 64)
@@ -949,6 +979,8 @@ func (c *RoleController) Update() {
 	} else {
 		// c.Rsp(false, err.Error())
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "更新角色错误！"}
+		c.ServeJSON()
 		// return
 	}
 }

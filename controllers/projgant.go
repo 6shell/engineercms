@@ -10,7 +10,7 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	"os"
-
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -522,9 +522,7 @@ func (c *ProjGantController) ImportProjGant() {
 	if err != nil {
 		logs.Error(err)
 	}
-	// beego.Info(h.path)
-	// var attachment string
-	var path string
+
 	const lll = "2006-01-02"
 	var convdate string
 	var id, secid int64
@@ -533,16 +531,19 @@ func (c *ProjGantController) ImportProjGant() {
 	var date, t1 time.Time
 	// var filesize int64
 	if h != nil {
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
 		//保存附件
-		path = "./attachment/" + h.Filename    // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("gantsexcel", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		file_path := "./attachment/" + clean_file_name // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
+		err = c.SaveToFile("gantsexcel", file_path)    //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 			c.Data["json"] = "err保存文件失败！"
 			c.ServeJSON()
 		} else {
 			//读出excel内容写入数据库
-			xlFile, err := xlsx.OpenFile(path) //
+			xlFile, err := xlsx.OpenFile(file_path) //
 			if err != nil {
 				logs.Error(err)
 			}
@@ -717,7 +718,7 @@ func (c *ProjGantController) ImportProjGant() {
 				}
 			}
 			//删除附件
-			err = os.Remove(path)
+			err = os.Remove(file_path)
 			if err != nil {
 				logs.Error(err)
 			}

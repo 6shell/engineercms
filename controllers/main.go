@@ -581,6 +581,7 @@ func (c *MainController) UpdateDatabase() {
 	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
 	if !isadmin {
 		c.Redirect("/login", 302)
+		return
 	}
 
 	err1, err2, err3, err4, err5, err6, err7 := models.UpdateDatabase()
@@ -614,6 +615,7 @@ func (c *MainController) ModifyDatabase() {
 	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
 	if !isadmin {
 		c.Redirect("/login", 302)
+		return
 	}
 	err := models.ModifyDatabase()
 	if err != nil {

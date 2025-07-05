@@ -1,37 +1,32 @@
 package controllers
 
 import (
-	"github.com/3xxx/engineercms/models"
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
-
-	"regexp"
-	"strconv"
-	//"strings"
-	"sync"
-
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"strings"
-
 	"bytes"
+	"context"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
-	"time"
-
+	"fmt"
+	"github.com/3xxx/engineercms/models"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/google/go-tika/tika"
-
-	"crypto/tls"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/google/go-tika/tika"
 	"io"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 )
 
 //type Article struct {
@@ -269,7 +264,7 @@ func (c *ElasticController) Upload() {
 		logs.Error(err)
 	}
 
-	var filepath, DiskDirectory, Url, attachmentname, article_body, filename1, filename2 string
+	var DiskDirectory, Url, attachmentname, article_body, filename1, filename2 string
 	var filesize, attachmentid int64
 	//由proj id取得url
 	Url, DiskDirectory, err = GetUrlPath(id_int64)
@@ -323,28 +318,32 @@ func (c *ElasticController) Upload() {
 			logs.Error(err)
 		}
 
-		filepath = DiskDirectory + "/" + attachmentname
+		file_name := filepath.Clean(attachmentname)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+		attachmentname = clean_file_name
+
+		file_path := DiskDirectory + "/" + clean_file_name // attachmentname
 		//如果附件名称相同，则覆盖上传，但数据库不追加
-		attachmentid, err = models.AddAttachment(attachmentname, filesize, 0, prodId)
+		attachmentid, err = models.AddAttachment(clean_file_name, filesize, 0, prodId)
 		if err != nil {
 			logs.Error(err)
 			c.Data["json"] = map[string]interface{}{"state": "写入附件数据库错误"}
 			c.ServeJSON()
 		} else {
 			// 如果文件存在，则返回
-			if PathisExist(filepath) {
+			if PathisExist(file_path) {
 				c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件已存在！"}
 				c.ServeJSON()
 				return
 			}
-			err = c.SaveToFile("input-ke-2[]", filepath) //.Join("attachment", attachment)) //存文件
+			err = c.SaveToFile("input-ke-2[]", file_path) //.Join("attachment", attachment)) //存文件
 			if err != nil {
 				logs.Error(err)
 				c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件保存错误！"}
 				c.ServeJSON()
 				return
 			}
-			filesize, _ = FileSize(filepath)
+			filesize, _ = FileSize(file_path)
 			filesize = filesize / 1000.0
 
 			//存入文件夹
@@ -354,7 +353,7 @@ func (c *ElasticController) Upload() {
 			// 	c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "存入文件夹错误"}
 			// 	c.ServeJSON()
 			// }
-			c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": attachmentname, "original": attachmentname, "url": Url + "/" + attachmentname}
+			c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": Url + "/" + clean_file_name}
 			c.ServeJSON()
 		}
 	}

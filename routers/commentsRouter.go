@@ -2124,6 +2124,24 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
         beego.ControllerComments{
+            Method: "Assembly",
+            Router: `/assembly/:id`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
+        beego.ControllerComments{
+            Method: "ChangeGroupName",
+            Router: `/changegroupname/:id`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
+        beego.ControllerComments{
             Method: "DeleteFreeCAD",
             Router: `/deletefreecad`,
             AllowHTTPMethods: []string{"post"},
@@ -2133,8 +2151,8 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
         beego.ControllerComments{
-            Method: "EditFCModel",
-            Router: `/editfcmodel`,
+            Method: "EditFCModel_back",
+            Router: `/editfcmodel_back`,
             AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -2215,7 +2233,7 @@ func init() {
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
         beego.ControllerComments{
             Method: "Oline3dEditor",
-            Router: `/online3deditor`,
+            Router: `/online3deditor/:id`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -2268,6 +2286,15 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
         beego.ControllerComments{
+            Method: "UpdateValue",
+            Router: `/updatevalue`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
+        beego.ControllerComments{
             Method: "UploadModel",
             Router: `/uploadmodel`,
             AllowHTTPMethods: []string{"get"},
@@ -2280,6 +2307,24 @@ func init() {
             Method: "UploadModelFile",
             Router: `/uploadmodelfile`,
             AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
+        beego.ControllerComments{
+            Method: "ValueArray",
+            Router: `/valuearray/:id`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:FreeCADController"],
+        beego.ControllerComments{
+            Method: "ValueGroup",
+            Router: `/valuegroup/:id`,
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

@@ -2593,7 +2593,7 @@ h3 .share-icon {
 
   function randomData() {
     var startId = ~~(Math.random() * 100),
-      rows = [];
+    rows = [];
     for (var i = 0; i < 10; i++) {
       rows.push({
         Id: startId + i,
@@ -2744,27 +2744,23 @@ h3 .share-icon {
           field: 'name',
           title: '用户名',
           halign: 'center',
-          align: 'center',
-
+          align: 'center'
         }, {
           field: 'Nickname',
           title: '昵称',
           halign: 'center',
-          align: 'center',
-
+          align: 'center'
         }, {
           field: 'Department',
           title: '部门',
           halign: 'center',
-          align: 'center',
-
+          align: 'center'
         }, {
           field: 'Secoffice',
           title: '科室',
           sortable: 'true',
           halign: 'center',
-          align: 'center',
-
+          align: 'center'
         }, {
           field: 'role',
           // visible: false,

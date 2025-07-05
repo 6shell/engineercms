@@ -147,7 +147,7 @@
             field: 'Title',
             title: '名称',
             formatter: setTitle,
-            align: "center",
+            // align: "center",
             valign: "middle"
           },
           {

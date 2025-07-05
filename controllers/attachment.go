@@ -464,7 +464,7 @@ func (c *AttachController) AddAttachment() {
 		// var news string
 		// var cid int64
 		// var parentidpath string
-		var filepath, DiskDirectory, Url string
+		var file_path, DiskDirectory, Url string
 		// var catalog models.PostMerit
 
 		prodlabel := c.GetString("prodlabel")
@@ -613,7 +613,10 @@ func (c *AttachController) AddAttachment() {
 			// 	logs.Error(err)
 			// } else {
 			// 	link1 := Url + "/" + attachmentname             // + FileSuffix //附件链接地址
-			filepath = DiskDirectory + "/" + attachmentname // + FileSuffix
+
+			file_name := filepath.Clean(attachmentname)
+			clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+			file_path = DiskDirectory + "/" + clean_file_name // + FileSuffix
 			// 	_, err = models.AddCatalogLink(cid, link1)
 			// 	if err != nil {
 			// 		logs.Error(err)
@@ -625,16 +628,18 @@ func (c *AttachController) AddAttachment() {
 
 			//把成果id作为附件的parentid，把附件的名称等信息存入附件数据库
 			//如果附件名称相同，则覆盖上传，但数据库不追加
-			_, err = models.AddAttachment(attachmentname, filesize, 0, prodId)
+			_, err = models.AddAttachment(clean_file_name, filesize, 0, prodId)
 			if err != nil {
 				logs.Error(err)
-				c.Data["json"] = map[string]interface{}{"state": "写入附件数据库错误"}
+				c.Data["json"] = map[string]interface{}{"state": "写入附件数据库错误!", "info": "写入附件数据库错误!", "data": "写入附件数据库错误!", "err": "ERROR"}
 				c.ServeJSON()
 			} else {
 				//存入文件夹
-				err = c.SaveToFile("file", filepath) //.Join("attachment", attachment)) //存文件    WaterMark(filepath)    //给文件加水印
+				err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(filepath)    //给文件加水印
 				if err != nil {
 					logs.Error(err)
+					c.Data["json"] = map[string]interface{}{"state": "存储文件错误!", "info": "存储文件错误!", "data": "存储文件错误!", "err": "ERROR"}
+					c.ServeJSON()
 				}
 				c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": attachmentname, "original": attachmentname, "url": Url + "/" + attachmentname}
 				c.ServeJSON()
@@ -687,7 +692,7 @@ func (c *AttachController) AddWxAttachment() {
 	// 	}
 	// }
 	var parentidpath, parentidpath1 string
-	var filepath, DiskDirectory, Url string
+	var DiskDirectory, Url string
 
 	//解析表单
 	filename := c.GetString("filename")
@@ -751,17 +756,21 @@ func (c *AttachController) AddWxAttachment() {
 			logs.Error(err)
 		}
 		//除了product，其余都是原始文件名，挺好的吧。
-		filepath = DiskDirectory + "/" + filename
+		file_name := filepath.Clean(filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+		// file_path = DiskDirectory + "/" + clean_file_path
+
+		file_path := DiskDirectory + "/" + clean_file_name // filename
 
 		//如果附件名称相同，则覆盖上传，但数据库不追加
-		_, err = models.AddAttachment(filename, 0, 0, prodId)
+		_, err = models.AddAttachment(clean_file_name, 0, 0, prodId)
 		if err != nil {
 			logs.Error(err)
 			c.Data["json"] = map[string]interface{}{"info": "ERR"}
 			c.ServeJSON()
 		} else {
 			//存入文件夹
-			err = c.SaveToFile("file", filepath) //给文件加水印WaterMark(filepath)
+			err = c.SaveToFile("file", file_path) //给文件加水印WaterMark(filepath)
 			if err != nil {
 				logs.Error(err)
 			}
@@ -778,34 +787,52 @@ func (c *AttachController) SaveDwgfile() {
 	idNum, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "字符转int64错误！"}
+		c.ServeJSON()
+		return
 	}
 	//根据附件id取得附件的prodid，路径
 	attachment, err := models.GetAttachbyId(idNum)
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "查询附件错误！"}
+		c.ServeJSON()
+		return
 	}
 
 	product, err := models.GetProd(attachment.ProductId)
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "查询成果错误！"}
+		c.ServeJSON()
+		return
 	}
 	//由proj id取得文件路径
 	_, diskdirectory, err := GetUrlPath(product.ProjectId)
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "获取项目路径错误！"}
+		c.ServeJSON()
+		return
 	}
 
 	//获取上传的文件
 	_, h, err := c.GetFile("file")
 	if err != nil {
 		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "上传文件错误！"}
+		c.ServeJSON()
+		return
 	}
 	if h != nil {
+		file_path := filepath.Clean(h.Filename)
+		clean_file_path := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_path), string(filepath.Separator))
+		// file_path = DiskDirectory + "/" + clean_file_path
 		//保存附件
-		filepath := diskdirectory + "/" + attachment.FileName
+		file_path = diskdirectory + "/" + clean_file_path // attachment.FileName
 		// f.Close() // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
 		//存入文件夹
-		err = c.SaveToFile("file", filepath) //.Join("attachment", attachment)) //存文件    WaterMark(filepath)    //给文件加水印
+		err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(filepath)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 		} else {
@@ -1077,9 +1104,9 @@ func (c *AttachController) AddAttachment2() {
 		if err != nil {
 			logs.Error(err)
 		}
-		var filepath string
 		// var filesize int64
 		if h != nil {
+
 			//保存附件
 			// attachment = h.Filename
 			// f.Close()// 关闭上传的文件，不然的话会出现临时文件不能清除的情况
@@ -1095,7 +1122,10 @@ func (c *AttachController) AddAttachment2() {
 			filename2 = strings.Replace(filename2, "/", "-", -1)
 			// FileSuffix := path.Ext(h.Filename)
 			// attachmentname := filename2 + FileSuffix
-			filepath = DiskDirectory + "/" + filename2
+			file_name := filepath.Clean(filename2)
+			clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
+			file_path := DiskDirectory + "/" + clean_file_name // filename2
 			//*****添加成果关联信息
 			if relevancy != "" {
 				array := strings.Split(relevancy, ",")
@@ -1156,7 +1186,7 @@ func (c *AttachController) AddAttachment2() {
 				if err != nil {
 					logs.Error(err)
 				}
-				err = c.SaveToFile("file", filepath) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+				err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 				if err != nil {
 					logs.Error(err)
 					c.Data["json"] = map[string]interface{}{"state": "WRONG保存文件出错", "title": err, "original": "", "url": ""}
@@ -1206,25 +1236,25 @@ func (c *AttachController) UpdateAttachment() {
 	if err != nil {
 		logs.Error(err)
 	}
-	var path, attachment string
-	// var filesize int64
+
 	if h != nil {
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
 		//保存附件
-		attachment = h.Filename
-		path = DiskDirectory + "/" + h.Filename // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
+		file_path := DiskDirectory + "/" + clean_file_name // h.Filename // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
 		// filesize, _ = FileSize(path)
 		// filesize = filesize / 1000.0
 		//把成果id作为附件的parentid，把附件的名称等信息存入附件数据库
 		//如果附件名称相同，则覆盖上传，但数据库不追加
-		_, err = models.AddAttachment(attachment, filesize, 0, pidNum)
+		_, err = models.AddAttachment(clean_file_name, filesize, 0, pidNum)
 		if err != nil {
 			logs.Error(err)
 		} else {
-			err = c.SaveToFile("file", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+			err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 			if err != nil {
 				logs.Error(err)
 			}
-			c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": attachment, "original": attachment, "url": Url + "/" + attachment}
+			c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": Url + "/" + clean_file_name}
 			c.ServeJSON()
 		}
 	}

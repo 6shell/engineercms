@@ -476,11 +476,11 @@
     return state.models; // 直接使用服务端返回的分页数据
   }
 
-  // 修改后的renderModels函数
+  // 修改后的renderModels函数?model=${model.modelurl}
   function renderModels() {
     const currentModels = getPaginatedModels();
     elements.modelGrid.innerHTML = currentModels.map(model => `
-        <a href="${model.modelurl}&id=${model.ID}" class="model-link">
+        <a href="${model.ID}" class="model-link">
             <div class="model-item">
                 <img src="${model.faceimgurl}" class="thumbnail" alt="${model.title}">
                 <div class="info-overlay">
@@ -535,7 +535,7 @@
       // 这里可以添加页面跳转逻辑
       console.log('跳转到：', url);
       var glbpath = url.replace(".FCStd",".glb")
-      window.location.href = "/v1/freecad/online3deditor?model="+glbpath;
+      window.location.href = "/v1/freecad/online3deditor/" + glbpath;
     }
   }
 

@@ -9,6 +9,7 @@ import (
 	"github.com/beego/beego/v2/client/httplib"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
+	_ "github.com/go-sql-driver/mysql"
 	"io"
 	"path"
 	"strconv"
@@ -2368,70 +2369,78 @@ func (c *ArticleController) AddProdArticle() {
 
 // 修改文章页面
 func (c *ArticleController) ModifyArticle() {
-	// _, _, uid, isadmin, _ := checkprodRole(c.Ctx)
-	// if !isadmin {
-	// 	route := c.Ctx.Request.URL.String()
-	// 	c.Data["Url"] = route
-	// 	c.Redirect("/roleerr?url="+route, 302)
-	// 	// c.Redirect("/roleerr", 302)
-	// 	return
-	// }
-	//这里再添加一次验证才行！！！
-	id := c.Ctx.Input.Param(":id")
-
-	var err error
-	//id转成64为
-	idNum, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		logs.Error(err)
-	}
-
-	Article, err := models.GetArticle(idNum)
-	if err != nil {
-		logs.Error(err)
-	}
-	//查出成果编号，名称和作者
-	prod, err := models.GetProd(Article.ProductId)
-	if err != nil {
-		logs.Error(err)
-	}
-	c.Data["product"] = prod
-	c.Data["article"] = Article
-	c.Data["IsLogin"] = checkAccount(c.Ctx)
-	c.TplName = "article_modify.tpl"
-}
-
-// 编辑 成果id
-func (c *ArticleController) UpdateArticle() {
+	_, _, uid, isadmin, _ := checkprodRole(c.Ctx)
 	pid := c.GetString("aid")
-	// beego.Info(aid)
-	subtext := c.GetString("subtext")
-	// beego.Info(subtext)
-	// content := c.GetString("content")
-	// content := c.GetString("editorValue")
-	content := c.GetString("content")
-	// beego.Info(content)
 	//id转成64为
 	pidNum, err := strconv.ParseInt(pid, 10, 64)
 	if err != nil {
 		logs.Error(err)
 	}
-	//将文章添加到成果id下
-	err = models.UpdateArticle(pidNum, subtext, content)
+	articel, err := models.GetArticle(pidNum)
 	if err != nil {
 		logs.Error(err)
-	} else {
-		c.Data["json"] = "ok"
-		c.ServeJSON()
-		// c.Redirect("/project/product/article/"+pid, 302) //回到修改后的文章
 	}
-	// } else {
-	// 	route := c.Ctx.Request.URL.String()
-	// 	c.Data["Url"] = route
-	// 	c.Redirect("/roleerr?url="+route, 302)
-	// 	// c.Redirect("/roleerr", 302)
-	// 	return
-	// }
+
+	if uid != 0 && articel.Id == uid || isadmin {
+
+		//这里再添加一次验证才行！！！
+		id := c.Ctx.Input.Param(":id")
+
+		var err error
+		//id转成64为
+		idNum, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			logs.Error(err)
+		}
+
+		Article, err := models.GetArticle(idNum)
+		if err != nil {
+			logs.Error(err)
+		}
+		//查出成果编号，名称和作者
+		prod, err := models.GetProd(Article.ProductId)
+		if err != nil {
+			logs.Error(err)
+		}
+		c.Data["product"] = prod
+		c.Data["article"] = Article
+		c.Data["IsLogin"] = checkAccount(c.Ctx)
+		c.TplName = "article_modify.tpl"
+	} else {
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "非管理员，非本人，无权限！"}
+		c.ServeJSON()
+	}
+}
+
+// 编辑 成果id
+func (c *ArticleController) UpdateArticle() {
+	_, _, uid, isadmin, _ := checkprodRole(c.Ctx)
+	pid := c.GetString("aid")
+	//id转成64为
+	pidNum, err := strconv.ParseInt(pid, 10, 64)
+	if err != nil {
+		logs.Error(err)
+	}
+	articel, err := models.GetArticle(pidNum)
+	if err != nil {
+		logs.Error(err)
+	}
+
+	if uid != 0 && articel.Id == uid || isadmin {
+		subtext := c.GetString("subtext")
+		content := c.GetString("content")
+		//将文章添加到成果id下
+		err = models.UpdateArticle(pidNum, subtext, content)
+		if err != nil {
+			logs.Error(err)
+		} else {
+			c.Data["json"] = "ok"
+			c.ServeJSON()
+		}
+	} else {
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "非管理员，非本人，无权限！"}
+		c.ServeJSON()
+	}
 }
 
 // 根据文章id删除文章_没删除文章中的图片
@@ -2456,11 +2465,6 @@ func (c *ArticleController) DeleteArticle() {
 			c.ServeJSON()
 		}
 	} else {
-		// route := c.Ctx.Request.URL.String()
-		// c.Data["Url"] = route
-		// c.Redirect("/roleerr?url="+route, 302)
-		// c.Redirect("/roleerr", 302)
-		// return
 		c.Data["json"] = "非管理员，无权删除！"
 		c.ServeJSON()
 	}
@@ -2480,6 +2484,7 @@ func (c *ArticleController) DeleteWxArticle() {
 	if openid == nil {
 		c.Data["json"] = "没有注册，未查到openid"
 		c.ServeJSON()
+		return
 	} else {
 		openID = openid.(string)
 		user, err := models.GetUserByOpenID(openID)
@@ -2487,6 +2492,7 @@ func (c *ArticleController) DeleteWxArticle() {
 			logs.Error(err)
 			c.Data["json"] = "未查到openid对应的用户"
 			c.ServeJSON()
+			return
 		} else {
 			//判断是否具备admin角色
 			role, err := models.GetRoleByRolename("admin")

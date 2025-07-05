@@ -3,19 +3,19 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/3xxx/engineercms/models"
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
-
-	"database/sql"
 	"github.com/3xxx/flow"
 	"github.com/beego/beego/v2/client/httplib"
-	// "log"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
+	_ "github.com/go-sql-driver/mysql"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -809,6 +809,12 @@ func (c *ProdController) ProvidesynchProducts() {
 
 // 向某个侧栏id下添加成果——这个没用，用attachment里的addattachment
 func (c *ProdController) AddProduct() {
+	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
+	if isadmin {
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "非管理员，无权限！"}
+		c.ServeJSON()
+		return
+	}
 	//取得客户端用户名
 	// v := c.GetSession("uname")
 	// var user models.User
@@ -828,6 +834,11 @@ func (c *ProdController) AddProduct() {
 	title := c.GetString("title")
 	label := c.GetString("label")
 	principal := c.GetString("principal")
+	// 防止编号和名称中存在../../之类的目录，存入文件的时候会导致跨目录存储，路径遍历漏洞
+	code = filepath.Clean(code)
+	code = strings.TrimPrefix(filepath.Join(string(filepath.Separator), code), string(filepath.Separator))
+	title = filepath.Clean(title)
+	title = strings.TrimPrefix(filepath.Join(string(filepath.Separator), title), string(filepath.Separator))
 	// content := c.GetString("content")
 	// beego.Info(id)
 	c.Data["Id"] = id
@@ -1150,6 +1161,12 @@ func (c *ProdController) DeleteProduct() {
 // 添加用户和角色的权限
 // 先删除这个文档id下所有permission，再添加新的。
 func (c *ProdController) Addpermission() {
+	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
+	if isadmin {
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "非管理员，无权限！"}
+		c.ServeJSON()
+		return
+	}
 	// roleids := c.GetString("roleids")
 	// rolearray := strings.Split(roleids, ",")
 	// userids := c.GetString("userids")

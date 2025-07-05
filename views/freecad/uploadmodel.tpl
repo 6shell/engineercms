@@ -54,7 +54,7 @@
     allowedFileExtensions: ['fcstd','stp','obj','glb','gltf','bin','jpg','png','bmp','jpeg','gif','svg'],
     minFileCount: 1,
     maxFileCount: 100,
-    maxFileSize: 10000,
+    maxFileSize: 100000,
     removeFromPreviewOnError: true,
     overwriteInitial: false,
     previewFileIcon: '<i class="fas fa-file"></i>',

@@ -15,6 +15,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	// "log"
 	"math/rand"
 	"net/http"
@@ -1057,61 +1058,55 @@ func (c *StandardController) ImportExcel() {
 	if err != nil {
 		logs.Error(err)
 	}
-	// var attachment string
-	var path string
-	// var filesize int64
+	var file_path string
 	if h != nil {
 		//保存附件
 		// attachment = h.Filename
 		// beego.Info(attachment)
-		path = "./attachment/" + h.Filename
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
+		file_path = "./attachment/" + clean_file_name
 		// path := c.GetString("url")  //存文件的路径
 		// path = path[3:]
 		// path = "./attachment" + "/" + h.Filename
 		// f.Close()                                             // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("excel", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		err = c.SaveToFile("excel", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 		}
-	}
-	if err != nil {
-		logs.Error(err)
-	}
-	var standard models.Standard
-	//读出excel内容写入数据库
-	// excelFileName := path                    //"/home/tealeg/foo.xlsx"
-	xlFile, err := xlsx.OpenFile(path) //excelFileName
-	if err != nil {
-		logs.Error(err)
-	}
-	for _, sheet := range xlFile.Sheets {
-		for _, row := range sheet.Rows {
-			// 这里要判断单元格列数，如果超过单元格使用范围的列数，则出错for j := 2; j < 7; j += 5 {
-			j := 0
-			standard.Number = row.Cells[j].String()
-			standard.Title = row.Cells[j+1].String()
-			// Uname, err := row.Cells[j+2].String()
-			// user := models.GetUserByUsername(Uname)
-			// standard.Uid = user.Id
-			// Category, err := row.Cells[j+3].String()
-			// category, _ := models.GetCategoryName(Category)
-			// standard.CategoryId = category.Id
-			standard.Created = time.Now()
-			standard.Updated = time.Now()
-			// standard.Content = row.Cells[j+4].String()
-			standard.Route = row.Cells[j+5].String()
-			_, err = models.SaveStandard(standard)
+		var standard models.Standard
+		//读出excel内容写入数据库
+		// excelFileName := path                    //"/home/tealeg/foo.xlsx"
+		xlFile, err := xlsx.OpenFile(file_path) //excelFileName
+		if err != nil {
+			logs.Error(err)
+		}
+		for _, sheet := range xlFile.Sheets {
+			for _, row := range sheet.Rows {
+				// 这里要判断单元格列数，如果超过单元格使用范围的列数，则出错for j := 2; j < 7; j += 5 {
+				j := 0
+				standard.Number = row.Cells[j].String()
+				standard.Title = row.Cells[j+1].String()
+				// Uname, err := row.Cells[j+2].String()
+				// user := models.GetUserByUsername(Uname)
+				// standard.Uid = user.Id
+				// Category, err := row.Cells[j+3].String()
+				// category, _ := models.GetCategoryName(Category)
+				// standard.CategoryId = category.Id
+				standard.Created = time.Now()
+				standard.Updated = time.Now()
+				// standard.Content = row.Cells[j+4].String()
+				standard.Route = row.Cells[j+5].String()
+				_, err = models.SaveStandard(standard)
 
-			if err != nil {
-				logs.Error(err)
+				if err != nil {
+					logs.Error(err)
+				}
 			}
-			// }
-			// for _, cell := range row.Cells {这里要继续循环cells，不能为空，即超出单元格使用范围
-			// 	fmt.Printf("%s\n", cell.String())
-
-			// }
 		}
 	}
+
 	c.TplName = "standard.tpl"
 	c.Redirect("/standard", 302)
 }
@@ -1137,122 +1132,58 @@ func (c *StandardController) ImportLibrary() {
 		logs.Error(err)
 	}
 	// var attachment string
-	var path string
+	// var filepath string
 	// var filesize int64
 	if h != nil {
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
 		//保存附件
-		// attachment = h.Filename
-		// beego.Info(attachment)
-		path = "./attachment/" + h.Filename
-		// path := c.GetString("url")  //存文件的路径
-		// path = path[3:]
-		// path = "./attachment" + "/" + h.Filename
-		// f.Close()                                             // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("excel2", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		file_path := "./attachment/" + clean_file_name // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
+		err = c.SaveToFile("excel2", file_path)        //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 		}
-	}
-	var library models.Library
-	//读出excel内容写入数据库
-	// excelFileName := path//"/home/tealeg/foo.xlsx"
-	// xlFile, err := xlsx.OpenFile(path) //excelFileName
-	f, err := excelize.OpenFile(path)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	// defer func() {
-	// 	if err := f.Close(); err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// }()
-	// func (f *File) GetActiveSheetIndex() int
-	// func (f *File) GetSheetList() []string
-	// func (f *File) GetSheetName(index int) string
+		var library models.Library
+		//读出excel内容写入数据库
+		f, err := excelize.OpenFile(file_path)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	// if err != nil {
-	// 	logs.Error(err)
-	// } else {
-	sheetindexint := f.GetActiveSheetIndex()
-	sheetname := f.GetSheetName(sheetindexint)
-	rows, err := f.GetRows(sheetname)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	for i, row := range rows {
-		if i != 0 {
-			// for j, colCell := range row {
-			logs.Info(row)
-			j := 0
-			library.Number = row[j]
-			library.Title = row[j+1]
-			library.Category = row[j+2]
-			library.LiNumber = row[j+3]
-			library.Year = row[j+4]
-			if len(row) > 5 {
-				library.Execute = row[j+5]
+		sheetindexint := f.GetActiveSheetIndex()
+		sheetname := f.GetSheetName(sheetindexint)
+		rows, err := f.GetRows(sheetname)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		for i, row := range rows {
+			if i != 0 {
+				logs.Info(row)
+				j := 0
+				library.Number = row[j]
+				library.Title = row[j+1]
+				library.Category = row[j+2]
+				library.LiNumber = row[j+3]
+				library.Year = row[j+4]
+				if len(row) > 5 {
+					library.Execute = row[j+5]
+				}
+				library.Created = time.Now()
+				library.Updated = time.Now()
+				_, err = models.SaveLibrary(library)
+				if err != nil {
+					logs.Error(err)
+					c.Data["json"] = map[string]interface{}{"state": "ERROR", "info": "保存到数据库出错"}
+					c.ServeJSON()
+				}
 			}
-			library.Created = time.Now()
-			library.Updated = time.Now()
-			_, err = models.SaveLibrary(library)
-			if err != nil {
-				logs.Error(err)
-			}
-			// fmt.Print(colCell, "\t")
 		}
 	}
-	// if err = rows.Close(); err != nil {
-	// 	fmt.Println(err)
-	// }
-	// for _, sheet := range xlFile.Sheets {
-	// 	for i, row := range sheet.Rows {
-	// 		if i != 0 {
-	// 			// 这里要判断单元格列数，如果超过单元格使用范围的列数，则出错for j := 2; j < 7; j += 5 {
-	// 			j := 0
-	// 			library.Number = row.Cells[j].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.Title = row.Cells[j+1].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.Category = row.Cells[j+2].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.LiNumber = row.Cells[j+3].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.Year = row.Cells[j+4].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.Execute = row.Cells[j+5].String()
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 			library.Created = time.Now()
-	// 			library.Updated = time.Now()
-	// 			_, err = models.SaveLibrary(library)
-	// 			if err != nil {
-	// 				logs.Error(err)
-	// 			}
-	// 		}
-	// 		// for _, cell := range row.Cells {这里要继续循环cells，不能为空，即超出单元格使用范围
-	// 		// 	fmt.Printf("%s\n", cell.String())
-	// 		// }
-	// 	}
-	// }
 	c.Data["json"] = map[string]interface{}{"state": "SUCCESS"}
 	c.ServeJSON()
-	// }
-
-	// c.TplName = "standard.tpl"
-	// c.Redirect("/standard", 302)
 }
 
 func (c *StandardController) Standard_one_addbaidu() {
@@ -1375,14 +1306,17 @@ func (c *StandardController) Upload() {
 		c.ServeJSON()
 		return
 	}
-	fileSuffix := path.Ext(h.Filename)
+	file_name := filepath.Clean(h.Filename)
+	clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
+	fileSuffix := path.Ext(clean_file_name)
 	if fileSuffix != ".DOC" && fileSuffix != ".doc" && fileSuffix != ".DOCX" && fileSuffix != ".docx" && fileSuffix != ".pdf" && fileSuffix != ".PDF" {
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件类型错误，请上传doc或pdf"}
 		c.ServeJSON()
 		return
 	}
 
-	category, categoryname, fileNumber, year, fileName, _ := SplitStandardName(h.Filename)
+	category, categoryname, fileNumber, year, fileName, _ := SplitStandardName(clean_file_name)
 	var filepath, article_body string
 	var standard models.Standard
 	// var filesize int64
@@ -1408,7 +1342,8 @@ func (c *StandardController) Upload() {
 	standard.Created = time.Now()
 	standard.Updated = time.Now()
 	standard.Uid = uid
-	standard.Route = "/attachment/standard/" + category + "/" + h.Filename
+	standard.Route = "/attachment/standard/" + category + "/" + clean_file_name
+	var file_path string
 	sid, err := models.SaveStandard(standard)
 	if err != nil {
 		// logs.Error(err)
@@ -1430,8 +1365,8 @@ func (c *StandardController) Upload() {
 				logs.Error(err)
 			}
 		}
-		filepath = "./attachment/standard/" + category + "/" + h.Filename
-		err = c.SaveToFile("input-ke-2[]", filepath) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		file_path = "./attachment/standard/" + category + "/" + clean_file_name
+		err = c.SaveToFile("input-ke-2[]", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			// logs.Error(err)
 			c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件保存错误！"}
@@ -1440,14 +1375,14 @@ func (c *StandardController) Upload() {
 		}
 		//filesize, _ = FileSize(filepath)
 		//filesize = filesize / 1000.0
-		c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": h.Filename, "original": h.Filename, "url": standard.Route}
+		c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": standard.Route}
 		c.ServeJSON()
 	}
 
 	cwd, _ := os.Getwd()
 
-	filepath = strings.Replace(filepath, "./attachment/", "/attachment/", -1)
-	f, err := os.Open(cwd + filepath)
+	url_path := strings.Replace(file_path, "./attachment/", "/attachment/", -1)
+	f, err := os.Open(cwd + url_path)
 	if err != nil {
 		// log.Fatal(err)
 		logs.Error(err)
@@ -1489,7 +1424,7 @@ func (c *StandardController) Upload() {
 	// inameexp := ".pdf"workpath + filename + onameexp
 	onameexp := ".png"
 	// mutool convert -O width=200 -F png -o output.png 01.pdf 1
-	arg := []string{"convert", "-O", "width=300", "-F", "png", "-o", cwd + "/static/images/" + fileName + onameexp, cwd + filepath, "1"}
+	arg := []string{"convert", "-O", "width=300", "-F", "png", "-o", cwd + "/static/images/" + fileName + onameexp, cwd + url_path, "1"}
 	fmt.Println("------------", arg)
 	cmd := exec.Command(datapath, arg...)
 	//记录开始时间

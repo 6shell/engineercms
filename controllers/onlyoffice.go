@@ -1107,7 +1107,7 @@ func (c *OnlyController) AddOnlyAttachment() {
 	// 	}
 	// }
 	_, _, uid, _, _ := checkprodRole(c.Ctx)
-	var filepath, DiskDirectory, Url string
+	var DiskDirectory, Url string
 	err := os.MkdirAll("./attachment/onlyoffice/", 0777) //..代表本当前exe文件目录的上级，.表示当前目录，没有.表示盘的根目录
 	if err != nil {
 		logs.Error(err)
@@ -1119,13 +1119,19 @@ func (c *OnlyController) AddOnlyAttachment() {
 	_, h, err := c.GetFile("file")
 	if err != nil {
 		logs.Error(err)
+
 	}
 	if h != nil {
 		//保存附件
 		//将附件的编号和名称写入数据库
-		_, code, title, _, _, _, _ := Record(h.Filename)
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+		_, code, title, _, _, _, _ := Record(clean_file_name)
 		// filename1, filename2 := SubStrings(attachment)
 		//当2个文件都取不到filename1的时候，数据库里的tnumber的唯一性检查出错。
+
+		// file_path := "./attachment/carousel/" + clean_file_name
+
 		if code == "" {
 			code = title //如果编号为空，则用文件名代替，否则多个编号为空导致存入数据库唯一性检查错误
 		}
@@ -1180,27 +1186,27 @@ func (c *OnlyController) AddOnlyAttachment() {
 		// FileSuffix := path.Ext(h.Filename)
 		// filepath = DiskDirectory + "/" + code + title + FileSuffix
 		// attachmentname := code + title + FileSuffix
-		filepath = DiskDirectory + "/" + h.Filename
+		file_path := DiskDirectory + "/" + clean_file_name
 		//把成果id作为附件的parentid，把附件的名称等信息存入附件数据库
 		//如果附件名称相同，则不能上传，数据库添加
-		attachmentname := h.Filename
+		// attachmentname := clean_file_name
 
-		_, _, err2 := models.AddOnlyAttachment(attachmentname, 0, 0, prodId)
+		_, _, err2 := models.AddOnlyAttachment(clean_file_name, 0, 0, prodId)
 		if err2 != nil {
 			logs.Error(err2)
 		} else {
 			//存入文件夹
 			//判断文件是否存在，如果不存在就写入
-			if _, err := os.Stat(filepath); err != nil {
+			if _, err := os.Stat(file_path); err != nil {
 				// beego.Info(err)
 				if os.IsNotExist(err) {
 					// beego.Info(err)
 					//return false
-					err = c.SaveToFile("file", filepath) //存文件
+					err = c.SaveToFile("file", file_path) //存文件
 					if err != nil {
 						logs.Error(err)
 					}
-					c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": h.Filename, "original": h.Filename, "url": Url + "/" + h.Filename}
+					c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": Url + "/" + clean_file_name}
 					c.ServeJSON()
 				}
 			} else {

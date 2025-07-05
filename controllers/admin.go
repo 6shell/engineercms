@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -1262,21 +1263,23 @@ func (c *AdminController) AddCarousel() {
 			//保存附件
 			// attachment = h.Filename
 			// beego.Info(attachment)
-			path := "./attachment/carousel/" // + h.Filename
-			url := "/attachment/carousel"    //+ h.Filename
+			file_name := filepath.Clean(h.Filename)
+			clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+			file_path := "./attachment/carousel/" + clean_file_name
+			url := "/attachment/carousel" + clean_file_name
 			//存入成果数据库
 			//如果编号重复，则不写入，值返回Id值。
 			//根据id添加成果code, title, label, principal, content string, projectid int64
-			_, err := models.AddAdminCarousel(h.Filename, url)
+			_, err := models.AddAdminCarousel(clean_file_name, url)
 			if err != nil {
 				logs.Error(err)
 			} else {
 				//存入文件夹
-				err = c.SaveToFile("file", path+h.Filename) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+				err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 				if err != nil {
 					logs.Error(err)
 				}
-				c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": h.Filename, "original": h.Filename, "url": url + "/" + h.Filename}
+				c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": url + "/" + clean_file_name}
 				c.ServeJSON()
 			}
 		}
@@ -1735,6 +1738,14 @@ func (c *AdminController) Jsoneditor() {
 // 给jsoneditor返回json数据
 func (c *AdminController) GetWxProjectConfig() {
 	id := c.GetString("projectid")
+	//id转成64为
+	_, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"state": "字符转int64错误!", "info": "字符转int64错误!", "data": "字符转int64错误!", "err": "ERROR"}
+		c.ServeJSON()
+		return
+	}
 	contents, _ := ioutil.ReadFile("./conf/" + id + ".json")
 	js, err := simplejson.NewJson([]byte(contents))
 	if err != nil {
@@ -1796,6 +1807,13 @@ func (c *AdminController) PutWxProjectConfig() {
 	// f, err := os.OpenFile("./attachment/onlyoffice/"+onlyattachment.FileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
 	if isadmin {
 		id := c.GetString("projectid")
+		_, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			logs.Error(err)
+			c.Data["json"] = map[string]interface{}{"state": "字符转int64错误!", "info": "字符转int64错误!", "data": "字符转int64错误!", "err": "ERROR"}
+			c.ServeJSON()
+			return
+		}
 		f, err := os.Create("./conf/" + id + ".json")
 		if err != nil {
 			logs.Error(err)
@@ -1811,29 +1829,37 @@ func (c *AdminController) PutWxProjectConfig() {
 		c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "json": id + ".json"}
 		c.ServeJSON()
 	} else {
-		c.Data["json"] = map[string]interface{}{"info": "非admin!"}
+		c.Data["json"] = map[string]interface{}{"info": "非admin!", "err": "ERROR"}
 		c.ServeJSON()
 	}
 }
 
 // 导入json数据
 func (c *AdminController) ImportJson() {
+	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.ServeJSON()
+		return
+	}
 	//获取上传的文件
 	_, h, err := c.GetFile("json")
 	if err != nil {
 		logs.Error(err)
 	}
-	var path string
+	var file_path string
 	if h != nil {
 		//保存附件
-		path = "./config/" + h.Filename
+		file_path := filepath.Clean(h.Filename)
+		file_path = strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_path), string(filepath.Separator))
+		file_path = "./config/" + file_path
 		// f.Close()                                             // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("json", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		err = c.SaveToFile("json", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 		}
 	}
-	contents, _ := ioutil.ReadFile(path)
+	contents, _ := ioutil.ReadFile(file_path)
 	js, err := simplejson.NewJson([]byte(contents))
 	if err != nil {
 		// panic("json format error")

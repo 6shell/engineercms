@@ -6,7 +6,7 @@ import (
 	"github.com/beego/beego/v2/server/web/pagination"
 
 	"github.com/3xxx/engineercms/models"
-	// "regexp"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -259,23 +259,26 @@ func (c *WikiController) Wiki_many_addbaidu() { //一对多模式
 		logs.Error(err)
 	}
 	// var attachment string
-	var path string
+	var file_path string
 	var filesize int64
 	if h != nil {
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
 		//保存附件
 		// attachment := h.Filename
 		// beego.Info(attachment)
 		// path =  + categoryproj.Number + categoryproj.Title + "/" + categoryphase.Title + "/" + categoryspec.Title + "/" + category + "/" + h.Filename
-		path = "./attachment/wiki/" + h.Filename
+		file_path = "./attachment/wiki/" + clean_file_name
 		// path := c.GetString("url")  //存文件的路径
 		// path = path[3:]
 		// path = "./attachment" + "/" + h.Filename
 		// f.Close()                                             // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("file", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		err = c.SaveToFile("file", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 		}
-		filesize, _ = FileSize(path)
+		filesize, _ = FileSize(file_path)
 		filesize = filesize / 1000.0
 	}
 	//获取用户名

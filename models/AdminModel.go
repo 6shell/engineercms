@@ -232,7 +232,6 @@ func init() {
 	_db.AutoMigrate(&PassProject{})
 
 	_db.AutoMigrate(&PhotoData{})
-	_db.AutoMigrate(&FreecadModel{}, &FreecadInputs{})
 
 	_db.AutoMigrate(&EstimateProjPhase{})
 	_db.AutoMigrate(&EstimateProject{})

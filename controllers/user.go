@@ -11,6 +11,7 @@ import (
 	"github.com/tealeg/xlsx"
 	"html/template"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -147,8 +148,9 @@ type userTableserver struct {
 func (c *UserController) User() {
 	_, _, _, isadmin, _ := CheckprodRole(c.Ctx)
 	if !isadmin {
-		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
+		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法添加用户！", "data": "请登录为管理员。"}
 		c.ServeJSON()
+		return
 	}
 	id := c.Ctx.Input.Param(":id")
 	c.Data["Id"] = id
@@ -264,6 +266,7 @@ func (c *UserController) AddUser() {
 	if !isadmin {
 		c.Data["json"] = map[string]interface{}{"erro": "ERROR", "msg": "非管理员权限，无法添加用户！", "data": "请登录管理员。"}
 		c.ServeJSON()
+		return
 	}
 	var user m.User
 	user_name := c.GetString("username")
@@ -316,6 +319,7 @@ func (c *UserController) AddUser() {
 		logs.Error(err)
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "message": err}
 		c.ServeJSON()
+		return
 	}
 	user.Status = statusint
 	role := c.GetString("role")
@@ -327,12 +331,13 @@ func (c *UserController) AddUser() {
 		// return
 		c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "message": "ok", "data": id}
 		c.ServeJSON()
+		return
 	} else if err == nil && id == 0 {
 		// c.Rsp(false, err.Error())
 		logs.Error(err)
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "message": "用户已存在", "data": id}
 		c.ServeJSON()
-		// return
+		return
 	} else {
 		logs.Error(err)
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "message": err, "data": id}
@@ -745,13 +750,16 @@ func (c *UserController) ImportUsers() {
 	if err != nil {
 		logs.Error(err)
 	}
-	var path string
+	var file_path string
 
 	// var filesize int64
 	if h != nil {
+		file_name := filepath.Clean(h.Filename)
+		clean_file_name := strings.TrimPrefix(filepath.Join(string(filepath.Separator), file_name), string(filepath.Separator))
+
 		//保存附件
-		path = "./attachment/" + h.Filename    // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
-		err = c.SaveToFile("usersexcel", path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+		file_path = "./attachment/" + clean_file_name // 关闭上传的文件，不然的话会出现临时文件不能清除的情况
+		err = c.SaveToFile("usersexcel", file_path)   //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
 		if err != nil {
 			logs.Error(err)
 			c.Data["json"] = "err保存文件失败"
@@ -759,7 +767,7 @@ func (c *UserController) ImportUsers() {
 		} else {
 			var user m.User
 			//读出excel内容写入数据库
-			xlFile, err := xlsx.OpenFile(path) //
+			xlFile, err := xlsx.OpenFile(file_path) //
 			if err != nil {
 				logs.Error(err)
 			}
@@ -866,7 +874,7 @@ func (c *UserController) ImportUsers() {
 				}
 			}
 			//删除附件
-			err = os.Remove(path)
+			err = os.Remove(file_path)
 			if err != nil {
 				logs.Error(err)
 			}

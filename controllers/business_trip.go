@@ -517,7 +517,7 @@ func (c *BusinessController) GetBysiness() {
 	} else {
 		c.Data["json"] = map[string]interface{}{"info": "用户未登录", "id": 0}
 		c.ServeJSON()
-		// return
+		return
 		// user.Id = 9
 	}
 
