@@ -604,6 +604,7 @@ func (c *UserController) DeleteUser() {
 	if !isadmin {
 		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
 		c.ServeJSON()
+		return
 	}
 	ids := c.GetString("ids")
 	array := strings.Split(ids, ",")
@@ -744,6 +745,7 @@ func (c *UserController) ImportUsers() {
 	if !isadmin {
 		c.Data["json"] = map[string]interface{}{"msg": "非管理员权限，无法查询用户信息！", "data": "请登录管理员。"}
 		c.ServeJSON()
+		return
 	}
 	//获取上传的文件
 	_, h, err := c.GetFile("usersexcel")

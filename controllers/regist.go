@@ -23,49 +23,57 @@ type RegistController struct {
 	web.Controller
 }
 
-func (this *RegistController) Get() {
-	u := this.Ctx.Input.UserAgent()
+func (c *RegistController) Get() {
+	u := c.Ctx.Input.UserAgent()
 	matched, err := regexp.MatchString("AppleWebKit.*Mobile.*", u)
 	if err != nil {
 		logs.Error(err)
 	}
 	if matched == true {
 		// beego.Info("移动端~")
-		this.TplName = "mobile/mregister.tpl"
+		c.TplName = "mobile/mregister.tpl"
 	} else {
 		// beego.Info("电脑端！")
-		this.TplName = "regist.tpl"
+		c.TplName = "regist.tpl"
 	}
 }
 
-func (this *RegistController) RegistErr() {
-	this.TplName = "registerr.tpl"
+func (c *RegistController) RegistErr() {
+	c.TplName = "registerr.tpl"
 }
 
-func (this *RegistController) CheckUname() {
+func (c *RegistController) CheckUname() {
 	var user models.User //这里修改
 	//fmt.Println(inputs)
-	user.Username = this.GetString("uname")
+	user.Username = c.GetString("uname")
 	err := models.CheckUname(user) //这里修改
 	if err == nil {
-		this.Ctx.WriteString("false")
+		c.Ctx.WriteString("false")
 		// return false
 	} else {
-		this.Ctx.WriteString("true")
+		c.Ctx.WriteString("true")
 		// return true
 	}
 	// return
 }
 
 // 提交注册名称
-func (this *RegistController) Post() {
+func (c *RegistController) Post() {
+	// 只允许管理员注册
+	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
+	// logs.Info(isadmin)
+	if !isadmin {
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "data": "非管理员，无权限！"}
+		c.ServeJSON()
+		return
+	}
 	var user models.User //这里修改
-	// inputs := this.Input()
+	// inputs := c.Input()
 	// beego.Info(inputs)
-	user.Username = this.GetString("uname")
-	user.Email = this.GetString("email")
-	user.Nickname = this.GetString("nickname")
-	Pwd1 := this.GetString("pwd")
+	user.Username = c.GetString("uname")
+	user.Email = c.GetString("email")
+	user.Nickname = c.GetString("nickname")
+	Pwd1 := c.GetString("pwd")
 
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte(Pwd1))
@@ -77,40 +85,24 @@ func (this *RegistController) Post() {
 	user.Lastlogintime = time.Now()
 	user.Status = 1
 	user.Role = "4"
-	_, err2 := models.SaveUser(user) //这里修改
-
-	// _, err = models.AddRoleUser(4, uid)
-	u := this.Ctx.Input.UserAgent()
-	matched, err := regexp.MatchString("AppleWebKit.*Mobile.*", u)
-	if err != nil {
+	id, err := models.SaveUser(user) //这里修改
+	if err == nil && id > 0 {
+		// c.Rsp(true, "Success")
+		// return
+		c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "message": "注册成功！", "data": id}
+		c.ServeJSON()
+		return
+	} else if err == nil && id == 0 {
+		// c.Rsp(false, err.Error())
 		logs.Error(err)
-	}
-	if matched == true {
-		// beego.Info("移动端~")
-		if err2 == nil {
-			// this.TplName = "success.tpl"
-			// this.Data["json"] = map[string]interface{}{"islogin": 0}
-			// this.ServeJSON()
-			this.Redirect("/login", 301)
-		} else {
-			// fmt.Println(err)
-			// this.TplName = "registerr.tpl"
-			// this.Data["json"] = map[string]interface{}{"islogin": 1}
-			// this.ServeJSON()
-			this.Redirect("/regist", 301)
-		}
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "message": "用户已存在！", "data": id}
+		c.ServeJSON()
+		return
 	} else {
-		// beego.Info("电脑端！")
-		if err2 == nil {
-			// this.TplName = "success.tpl"
-			this.Redirect("/login", 301)
-		} else {
-			// fmt.Println(err)
-			// this.TplName = "registerr.tpl"
-			this.Redirect("/regist", 301)
-		}
+		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "message": err, "data": id}
+		c.ServeJSON()
 	}
-
 }
 
 // @Title post wx regist
@@ -125,7 +117,7 @@ func (this *RegistController) Post() {
 // @router /wxregist [post]
 // 微信小程序根据用户输入的用户名和密码后，将openid存到用户名对应的数据表中，
 // 方便下次自动根据openid匹配用户后自动登录wxlogin
-// 这个不是真正的注册。另见WxRegion()
+// 这个不是真正的注册。另见 WxRegion()
 func (c *RegistController) WxRegist() {
 	var user models.User
 	var uid string
@@ -306,7 +298,9 @@ func (c *RegistController) WxRegion() {
 	err := models.CheckUname(user)
 	if err != nil {
 		logs.Error(err)
-	} else { //用户存在
+		// 没查到，出错，继续注册
+	} else {
+		// 查到用户存在
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "用户名已存在！"}
 		c.ServeJSON()
 		return
@@ -437,31 +431,31 @@ func (c *RegistController) WxRegion() {
 }
 
 // post方法
-func (this *RegistController) GetUname() {
+func (c *RegistController) GetUname() {
 	var user models.User //这里修改[]*models.User(uname string)
 	//fmt.Println(inputs)
-	user.Username = this.GetString("uname")
+	user.Username = c.GetString("uname")
 	// beego.Info(user.Username)
 	uname1, err := models.GetUname(user) //这里修改
 	//转换成json数据？
 	// beego.Info(uname1[0].Username)
 	// b, err := json.Marshal(uname1)
 	if err == nil {
-		// this.Ctx.WriteString(string(b))
-		this.Data["json"] = uname1 //string(b)
-		this.ServeJSON()
+		// c.Ctx.WriteString(string(b))
+		c.Data["json"] = uname1 //string(b)
+		c.ServeJSON()
 	}
-	// 	this.Ctx.WriteString(uname1[1].Username)
+	// 	c.Ctx.WriteString(uname1[1].Username)
 	// 	// return uname1[0].Username
 	// }
 	// return uname1[0].Username
 }
 
 // get方法，用于x-editable的select2方法
-func (this *RegistController) GetUname1() {
+func (c *RegistController) GetUname1() {
 	var user models.User //这里修改[]*models.User(uname string)
 	//fmt.Println(inputs)
-	user.Username = this.GetString("uname")
+	user.Username = c.GetString("uname")
 	// beego.Info(user.Username)
 	uname1, err := models.GetUname(user) //这里修改
 	//转换成json数据？
@@ -486,11 +480,11 @@ func (this *RegistController) GetUname1() {
 	}
 	// beego.Info(uname1) //[0xc08214b880 0xc08214b960 0xc08214ba40
 	// beego.Info(slice1) //[{1471  admin} {1475  cai.wc} {1476  zeng.cw}
-	// this.Data["Userselect"] = slice1
-	this.Data["json"] = slice1 //string(b)
-	this.ServeJSON()
-	// this.TplName = "loginerr.html"
-	// 	this.Ctx.WriteString(uname1[1].Username)
+	// c.Data["Userselect"] = slice1
+	c.Data["json"] = slice1 //string(b)
+	c.ServeJSON()
+	// c.TplName = "loginerr.html"
+	// 	c.Ctx.WriteString(uname1[1].Username)
 	// 	// return uname1[0].Username
 	// }
 	// return uname1[0].Username
