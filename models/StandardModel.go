@@ -48,31 +48,25 @@ func init() {
 // 标准存入数据库
 func SaveStandard(standard Standard) (sid int64, err error) {
 	o := orm.NewOrm()
+	var inserterr error
 	//判断是否有重名
 	// var spider Spider //下面这个filter放在topic=&Topic{后面用返回one(topic)则查询出错！
 	//只有编号和主机都不同才写入。
 	err = o.QueryTable("standard").Filter("number", standard.Number).Filter("title", standard.Title).One(&standard, "Id")
 	// err = o.QueryTable("topic").Filter("categoryid", cid).Filter("tnumber", tnumber).One(&topic, "Id")
 	if err == orm.ErrNoRows { //Filter("tnumber", tnumber).One(topic, "Id")==nil则无法建立
-		// 没有找到记录
-		// spider1 := &Spider{
-		// 	Number:   number,
-		// 	Name:     name,
-		// 	Link:     link,
-		// 	UserName: username,
-		// 	UserIp:   userip,
-		// 	Created:  time.Now(),
-		// 	Updated:  time.Now(),
-		// }
-		sid, err = o.Insert(&standard)
-		if err != nil {
-			return 0, err //如果文章编号相同，则唯一性检查错误，返回id吗？
+		// 没有找到记录则插入
+		sid, inserterr = o.Insert(&standard)
+		if inserterr != nil {
+			return 0, inserterr // 如果文章编号相同，则唯一性检查错误，返回id吗？
 		}
-	} else { //进行更新
-		// _, err = o.Update(cate)
-		sid, err = o.Update(&standard)
+		return sid, nil
 	}
-	return sid, err
+	// else { // 进行更新 20251018不能更新
+	// 	// _, err = o.Update(cate)
+	// 	sid, err = o.Update(&standard)
+	// }
+	return standard.Id, err
 	// 原来的代码orm := orm.NewOrm()
 	// // fmt.Println(user)
 	// uid, err = orm.Insert(&user) //_, err = o.Insert(reply)

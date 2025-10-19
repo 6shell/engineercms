@@ -25,7 +25,7 @@
       <div class="content">
         <h1>E</h1>
         <h6>EngineerCMS</h6>
-        <form method="POST" action="/regist">
+        <form method="POST" action="/regist"> <!-- 是这里提交后台的！！ -->
           <input type="text" id="uname" name="uname" placeholder="Full Name" class="validate" required>
           <input type="text" id="nickname" name="nickname" placeholder="Nick Name" class="validate" required>
           <input type="email" id="email" name="email" placeholder="Email" class="validate" required>

@@ -178,6 +178,7 @@ func init() {
 					&controllers.AttachController{},
 					&controllers.MainController{},
 					&controllers.StandardController{},
+					&controllers.ImportStandardController{},
 					&controllers.DiaryController{},
 					&controllers.PayController{},
 					&controllers.FinanceController{},
@@ -312,7 +313,7 @@ func init() {
 	web.Router("/vue", &controllers.MainController{}, "*:Vue")
 	web.Router("/vuepost", &controllers.MainController{}, "*:VuePost")
 	web.Router("/test", &controllers.MainController{}, "*:Test")
-	web.Router("/mapus", &controllers.MainController{}, "*:Mapus")
+	// web.Router("/mapus", &controllers.MainController{}, "*:Mapus")
 	web.Router("/autodesk", &controllers.MainController{}, "*:Autodesk")
 	// web.Router("/usermanage", &controllers.MainController{}, "*:UserManage")
 	// web.Router("/.well-known/pki-validation/AC9A20F9BD09F18D247337AABC67BC06.txt", &controllers.AdminController{}, "*:Testdown")

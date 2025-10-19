@@ -9,18 +9,18 @@ type ProfController struct {
 	web.Controller
 }
 
-func (this *ProfController) Get() {
-	switch this.Ctx.Input.Param(":app") {
+func (c *ProfController) Get() {
+	switch c.Ctx.Input.Param(":app") {
 	default:
-		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
+		pprof.Index(c.Ctx.ResponseWriter, c.Ctx.Request)
 	case "":
-		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
+		pprof.Index(c.Ctx.ResponseWriter, c.Ctx.Request)
 	case "cmdline":
-		pprof.Cmdline(this.Ctx.ResponseWriter, this.Ctx.Request)
+		pprof.Cmdline(c.Ctx.ResponseWriter, c.Ctx.Request)
 	case "profile":
-		pprof.Profile(this.Ctx.ResponseWriter, this.Ctx.Request)
+		pprof.Profile(c.Ctx.ResponseWriter, c.Ctx.Request)
 	case "symbol":
-		pprof.Symbol(this.Ctx.ResponseWriter, this.Ctx.Request)
+		pprof.Symbol(c.Ctx.ResponseWriter, c.Ctx.Request)
 	}
-	this.Ctx.ResponseWriter.WriteHeader(200)
+	c.Ctx.ResponseWriter.WriteHeader(200)
 }

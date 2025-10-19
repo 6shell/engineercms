@@ -9,7 +9,7 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
@@ -116,16 +116,16 @@ func init() {
 	}
 	switch db_type {
 	// 1.注册驱动
-	case "mysql":
-		orm.RegisterDriver("mysql", orm.DRMySQL)
-		dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", db_user, db_pass, db_host, db_port, db_name)
-		// 注册xorm
-		// var err error
-		// engine, err = xorm.NewEngine(db_type, dns)
-		// if err != nil {
-		// 	log.Println(err)
-		// }
-		break
+	// case "mysql":
+	// 	orm.RegisterDriver("mysql", orm.DRMySQL)
+	// 	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", db_user, db_pass, db_host, db_port, db_name)
+	// 	// 注册xorm
+	// 	// var err error
+	// 	// engine, err = xorm.NewEngine(db_type, dns)
+	// 	// if err != nil {
+	// 	// 	log.Println(err)
+	// 	// }
+	// 	break
 	case "postgres":
 		orm.RegisterDriver("postgres", orm.DRPostgres)
 		dns = fmt.Sprintf("dbname=%s host=%s  user=%s  password=%s  port=%s  sslmode=%s", db_name, db_host, db_user, db_pass, db_port, db_sslmode)
@@ -268,10 +268,10 @@ func createdb() {
 	var dns string
 	var sqlstring string
 	switch db_type {
-	case "mysql":
-		dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8", db_user, db_pass, db_host, db_port)
-		sqlstring = fmt.Sprintf("CREATE DATABASE  if not exists `%s` CHARSET utf8 COLLATE utf8_general_ci", db_name)
-		break
+	// case "mysql":
+	// 	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8", db_user, db_pass, db_host, db_port)
+	// 	sqlstring = fmt.Sprintf("CREATE DATABASE  if not exists `%s` CHARSET utf8 COLLATE utf8_general_ci", db_name)
+	// 	break
 	case "postgres":
 		dns = fmt.Sprintf("host=%s  user=%s  password=%s  port=%s  sslmode=%s", db_host, db_user, db_pass, db_port, db_sslmode)
 		sqlstring = fmt.Sprintf("CREATE DATABASE %s", db_name)
@@ -324,12 +324,12 @@ func Connect() {
 		logs.Error(err)
 	}
 	switch db_type {
-	case "mysql":
-		orm.RegisterDriver("mysql", orm.DRMySQL)
-		dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", db_user, db_pass, db_host, db_port, db_name, 30)
-		// set default database
-		// orm.RegisterDataBase("default", "mysql", "username:password@tcp(127.0.0.1:3306)/db_name?charset=utf8", 30)
-		break
+	// case "mysql":
+	// 	orm.RegisterDriver("mysql", orm.DRMySQL)
+	// 	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8", db_user, db_pass, db_host, db_port, db_name, 30)
+	// 	// set default database
+	// 	// orm.RegisterDataBase("default", "mysql", "username:password@tcp(127.0.0.1:3306)/db_name?charset=utf8", 30)
+	// 	break
 	case "postgres":
 		orm.RegisterDriver("postgres", orm.DRPostgres)
 		dns = fmt.Sprintf("dbname=%s host=%s  user=%s  password=%s  port=%s  sslmode=%s", db_name, db_host, db_user, db_pass, db_port, db_sslmode)

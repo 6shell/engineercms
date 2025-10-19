@@ -16,33 +16,188 @@
     /*考虑浏览器兼容性：兼容 Chrome, Safari, Opera */
     filter: drop-shadow(10px 10px 10px rgba(0, 0, 0, .5));
   }
+  
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .delete-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+  }
+  
+  .delete-btn:hover {
+    background: #cc0000;
+  }
+  
+  .admin-panel {
+    /*position: fixed;*/
+    top: 10px;
+    right: 70px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+  
+  .admin-toggle {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .admin-toggle:hover {
+    background: #0056b3;
+  }
+  
+  .login-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .login-dialog {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-width: 300px;
+  }
+  
+  .login-dialog h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .login-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .login-btn:hover {
+    background: #218838;
+  }
+  
+  .cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cancel-btn:hover {
+    background: #545b62;
+  }
   </style>
 </head>
 
 <body>
   <div v-bind:class="{loading:state.loading}" id="app" v-cloak>
+    <div class="admin-panel">
+      <button v-on:click="toggleAdminMode" class="admin-toggle" v-text="isAdmin ? '退出管理员模式' : '进入管理员模式'"></button>
+      <button v-on:click="deleteElasticAll" class="admin-toggle" v-text="isAdmin ? '删除所有' : ''"></button>
+    </div>
+    
+    <!-- 管理员登录对话框 -->
+    <div v-if="showLoginDialog" class="login-dialog-overlay">
+      <div class="login-dialog">
+        <h3>管理员登录</h3>
+        <form v-on:submit.prevent="adminLogin">
+          <div class="form-group">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" v-model="loginForm.username" required>
+          </div>
+          <div class="form-group">
+            <label for="password">密码:</label>
+            <input type="password" id="password" v-model="loginForm.password" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="login-btn">登录</button>
+            <button type="button" v-on:click="cancelLogin" class="cancel-btn">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div id="search-form">
       <form v-on:submit.prevent="">
         <input v-model.lazy="query" type="text" size="50" placeholder="Search...">
       </form>
-      <p class="total"><span class="label"># results/</span><span v-html="total" class="content">{{ .total }}</span></p>
+      <p class="total"><span class="label"># results/</span><span v-html="total" class="content"></span></p>
     </div>
     <div v-if="total < 1 && !state.loading" class="no-results">
       <p>Sorry, no results for your query&hellip;</p>
     </div>
     <div v-for="result in results" v-bind:id="result.id" :key="result.id" class="result">
-      <h2>
-        <span v-html="result.title" class="title"></span>
-        <span v-html="result.published" class="published"></span>
-        <span v-html="result.author.first_name" class="published"></span>
-        <!-- <span v-html="result.body" class="published"></span> -->
-        {{/* /{{ result.published }}/*/}}
-      </h2>
+      <div class="result-header">
+        <h2>
+          <span v-html="result.title" class="title"></span>
+          <span v-html="result.published" class="published"></span>
+          <span v-html="result.author.first_name" class="published"></span>
+          <!-- <span v-html="result.body" class="published"></span> -->
+
+        </h2>
+        <button v-if="isAdmin" v-on:click="deleteResult(result.id)" class="delete-btn" title="删除此记录">×</button>
+      </div>
       <div class="highlights">
-        {{/* <p v-show="result.alt" class="alt">*/}}
+          <!-- <p v-show="result.alt" class="alt">-->
           <p v-show="result.body" class="alt">
             <span class="label">Alt/</span>
-            {{/* <span v-html="result.alt" class="content"></span>*/}}
+            <!-- <span v-html="result.alt" class="content"></span>-->
             <span v-html="result.body" class="content"></span>
           </p>
           <p v-show="result.transcript" class="transcript">
@@ -56,35 +211,15 @@
     </div>
     <p v-show="state.fetching" id="loading-results">Loading results...</p>
     <p v-show="state.loading" id="loading-app">Loading the application...</p>
-    <p v-if="state.error" id="app-error" v-html="[state.error.status]">[{{ .state.error.status }}] {{ .state.error.statusText }}</p>
+    <p v-if="state.error" id="app-error" v-html="state.error.status + ' ' + state.error.statusText"></p>
   </div>
   <a href="https://github.com/elastic/go-elasticsearch/tree/master/_examples/xkcdsearch" title="See the source code at GitHub" style="position: fixed; top: 0; right: 0; border: 0; display: inline-block;">
     <img src="/static/elastic/assets/images/github-ribbon.svg" width="50px" height="50px" alt=""></a>
   <a href="https://xkcd.com/license.html" style="position: fixed; bottom: 0; right: 0; border: 0; display: inline-block;">
-    <img src="https://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-nc.png" height="15px"></a>
+    <img src="/static/img/by-nc.png" height="15px"></a>
   <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
   <script src="/static/elastic/vue.js"></script>
   <script src="/static/elastic/application_standard.js"></script>
 </body>
 
 </html>
-<!-- vue.js提示Vue is not a constructor或Vue.createApp is not a function解决方法 -->
-<!-- /*Vue 3*/
-Vue.createApp({
-  data() {
-    return {
-      items: [{ message: 'Foo' }, { message: 'Bar' }]
-    }
-  }
-}).mount('#array-rendering')
-
-/*Vue 2*/
-var example1 = new Vue({
-  el: '#example-1',
-  data: {
-    items: [
-      { message: 'Foo' },
-      { message: 'Bar' }
-    ]
-  }
-}) -->

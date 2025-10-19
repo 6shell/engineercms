@@ -49,6 +49,28 @@ type Poisstruct struct {
 //   lat string    `json:"lat"`
 //  }
 
+// @Title get mapus web
+// @Description get mapus web
+// @Success 200 {object} models.GetMapus
+// @Failure 400 Invalid page supplied
+// @Failure 404 location not found
+// @router /mapus [get]
+// 取得mapus页面
+func (c *MainController) Mapus() {
+	c.TplName = "supa-mapus/mapus.html"
+}
+
+// @Title get terrain web
+// @Description get terrain web
+// @Success 200 {object} models.GetMapus
+// @Failure 400 Invalid page supplied
+// @Failure 404 location not found
+// @router /terrain [get]
+// 取得mapus页面
+func (c *MainController) Terrain() {
+	c.TplName = "supa-mapus/terrain.html"
+}
+
 // @Title get tianditu location
 // @Description get tianditu location
 // @Param keyword query string true "The keyword of location"
@@ -56,7 +78,7 @@ type Poisstruct struct {
 // @Failure 400 Invalid page supplied
 // @Failure 404 location not found
 // @router /tianditusearch [get]
-// 取得同步文章列表
+// 查询地址
 func (c *SupaMapusController) Search() {
 	keyword := c.GetString("keyword")
 	logs.Info(keyword)

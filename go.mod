@@ -1,6 +1,8 @@
 module github.com/3xxx/engineercms
 
-go 1.19
+go 1.21
+
+toolchain go1.21.0
 
 require (
 	github.com/3xxx/flow v0.9.0
@@ -10,19 +12,19 @@ require (
 	github.com/beego/i18n v0.0.0-20161101132742-e9308947f407
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/boombuler/barcode v1.0.1
-	github.com/casbin/beego-orm-adapter/v3 v3.0.2
+	github.com/casbin/beego-orm-adapter/v3 v3.3.0
 	github.com/casbin/casbin/v2 v2.100.0
-	github.com/casbin/xorm-adapter/v2 v2.5.1
 	github.com/disintegration/gift v1.2.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/dlclark/regexp2 v1.7.0
-	github.com/elastic/go-elasticsearch/v8 v8.5.0
+	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/go-ole/go-ole v1.2.6
 	github.com/go-pay/gopay v1.5.106
+	github.com/go-pay/util v0.0.4
 	github.com/go-pay/xlog v0.0.3
-	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/go-tika v0.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/holys/initials-avatar v0.0.0-20180809162153-a82edcad3408
@@ -39,7 +41,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/tealeg/xlsx v1.0.5
-	github.com/u2takey/ffmpeg-go v0.4.1
+	github.com/u2takey/ffmpeg-go v0.5.0
 	github.com/unidoc/unioffice v1.21.1
 	github.com/wechatpay-apiv3/wechatpay-go v0.2.20
 	github.com/xuri/excelize/v2 v2.9.0
@@ -65,14 +67,14 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/dchest/lru v0.0.0-20151022103600-d8fd1e40a385 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
-	github.com/elastic/elastic-transport-go/v8 v8.0.0-20211216131617-bbee439d559c // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.6.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.5 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-pay/crypto v0.0.1 // indirect
 	github.com/go-pay/errgroup v0.0.2 // indirect
-	github.com/go-pay/util v0.0.4 // indirect
 	github.com/go-pay/xtime v0.0.2 // indirect
 	github.com/goccy/go-json v0.8.1 // indirect
-	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -109,6 +111,9 @@ require (
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect

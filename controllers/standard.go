@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/3xxx/engineercms/controllers/utils"
 	"github.com/3xxx/engineercms/models"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/google/go-tika/tika"
 	"github.com/tealeg/xlsx"
 	"github.com/xuri/excelize/v2"
@@ -192,265 +192,6 @@ func (c *StandardController) Index() {
 	logs.Close()
 }
 
-// @Title get standard elasticsearch web
-// @Description get standard elasticsearch web
-// @Success 200 {object} models.GetElastic
-// @Failure 400 Invalid page supplied
-// @Failure 404 Elastic not found
-// @router /getelasticstandard [get]
-// 进入全文搜索主页面
-func (c *StandardController) GetElasticStandard() {
-	u := c.Ctx.Input.UserAgent()
-	matched, err := regexp.MatchString("AppleWebKit.*Mobile.*", u)
-	if err != nil {
-		logs.Error(err)
-	}
-	if matched == true {
-		c.TplName = "standard/index_standard.html"
-	} else {
-		c.TplName = "standard/index_standard.html"
-	}
-}
-
-// @Title get search
-// @Description get earch
-// @Param q query string false "The query="
-// @Param a formData string false "The after..."
-// @Success 200 {object} models.GetSearch
-// @Failure 400 Invalid page supplied
-// @Failure 404 Search not found
-// @router /elasticsearch [get]
-// Search returns results matching a query, paginated by after.
-func (c *StandardController) ElasticSearch() { //(*SearchResults, error)
-	// 3. Search for the indexed documents
-	// Build the request body.
-	query := c.GetString("q")
-	after := c.GetStrings("a")
-	//beego.Info(after)
-	//if query == "" {
-	//	query = "目标"
-	//}
-	// *************
-	es, err := elasticsearch.NewDefaultClient()
-	if err != nil {
-		// log.Fatalf("Error creating the client: %s", err)
-		logs.Error(err)
-	}
-	var results SearchResults
-	//Search returns results matching a query, paginated by after.
-	res, err := es.Search(
-		es.Search.WithIndex(indexName),
-		es.Search.WithBody(buildQuery(query, after...)),
-	)
-
-	defer res.Body.Close()
-	//log.Printf(res.String())
-
-	if res.IsError() {
-		var e map[string]interface{}
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			//return //&results, err
-			c.Data["json"] = map[string]interface{}{"status": 1, "info": "ERR"}
-			c.ServeJSON()
-		}
-		//return //&results, fmt.Errorf("[%s] %s: %s", res.Status(), e["error"].(map[string]interface{})["type"], e["error"].(map[string]interface{})["reason"])
-		c.Data["json"] = map[string]interface{}{"status": 2, "info": "ERR"}
-		c.ServeJSON()
-	}
-
-	type envelopeResponse struct {
-		Took int
-		Hits struct {
-			Total struct {
-				Value int
-			}
-			Hits []struct {
-				ID         string          `json:"_id"`
-				Source     json.RawMessage `json:"_source"`
-				Highlights json.RawMessage `json:"highlight"`
-				Sort       []interface{}   `json:"sort"`
-			}
-		}
-	}
-
-	var r envelopeResponse
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		//return //&results, err
-		c.Data["json"] = map[string]interface{}{"status": 3, "info": "ERR"}
-		c.ServeJSON()
-	}
-
-	results.Total = r.Hits.Total.Value
-
-	if len(r.Hits.Hits) < 1 {
-		results.Hits = []*Hit{}
-		//return //&results, nil
-		c.Data["json"] = &results //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
-		c.ServeJSON()
-	}
-
-	for _, hit := range r.Hits.Hits {
-		var h Hit
-		h.ID = hit.ID
-		h.Sort = hit.Sort
-		//如果是office文件，则/officeview/id，如果是pdf文件，则/pdf?id=
-		//根据id（attatchment id）判断附件类型
-		//h.URL = strings.Join([]string{baseURL, h.ID, ""}, "/")
-		// h.URL = strings.Join([]string{baseURL, h.ID}, "?id=")
-		h.URL = strings.Join([]string{baseURL, h.ID, "&keyword=" + query}, "")
-
-		if err := json.Unmarshal(hit.Source, &h); err != nil {
-			//return //&results, err
-			logs.Error(err)
-			c.Data["json"] = map[string]interface{}{"status": 5, "info": "ERR"}
-			c.ServeJSON()
-		}
-
-		// 对body字段进行缩减
-		//myString.substr(start, 318)
-		//beego.Info(h.Body)
-		h.Body = SubString(h.Body, 0, 300)
-
-		if len(hit.Highlights) > 0 {
-			if err := json.Unmarshal(hit.Highlights, &h.Highlights); err != nil {
-				//return //&results, err
-				c.Data["json"] = map[string]interface{}{"status": 6, "info": "ERR"}
-				c.ServeJSON()
-			}
-		}
-
-		results.Hits = append(results.Hits, &h)
-	}
-	// beego.Info(&results)
-	//return &results, nil
-	c.Data["json"] = &results //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
-	c.ServeJSON()
-}
-
-// @Title get search
-// @Description get earch
-// @Param keyword query string false "The query="
-// @Param search_after formData string false "paginated by earchpage..."
-// @Success 200 {object} models.GetSearch
-// @Failure 400 Invalid page supplied
-// @Failure 404 Search not found
-// @router /wxelasticsearch [get]
-// Search returns results matching a query, paginated by after.
-func (c *StandardController) WxElasticSearch() { //(*SearchResults, error)
-	// 3. Search for the indexed documents
-	// Build the request body.
-	query := c.GetString("keyword")
-	after := c.GetStrings("search_after")
-	//beego.Info(after)
-	//if query == "" {
-	//	query = "目标"
-	//}
-	// *************
-	es, err := elasticsearch.NewDefaultClient()
-	if err != nil {
-		// log.Fatalf("Error creating the client: %s", err)
-		logs.Error(err)
-	}
-	var results SearchResults
-	//Search returns results matching a query, paginated by after.
-	res, err := es.Search(
-		es.Search.WithIndex(indexName),
-		es.Search.WithBody(buildQuery(query, after...)),
-	)
-
-	defer res.Body.Close()
-	//log.Printf(res.String())
-
-	if res.IsError() {
-		var e map[string]interface{}
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			//return //&results, err
-			c.Data["json"] = map[string]interface{}{"status": 1, "info": "ERR"}
-			c.ServeJSON()
-		}
-		//return //&results, fmt.Errorf("[%s] %s: %s", res.Status(), e["error"].(map[string]interface{})["type"], e["error"].(map[string]interface{})["reason"])
-		c.Data["json"] = map[string]interface{}{"status": 2, "info": "ERR"}
-		c.ServeJSON()
-	}
-
-	type envelopeResponse struct {
-		Took int
-		Hits struct {
-			Total struct {
-				Value int
-			}
-			Hits []struct {
-				ID         string          `json:"_id"`
-				Source     json.RawMessage `json:"_source"`
-				Highlights json.RawMessage `json:"highlight"`
-				Sort       []interface{}   `json:"sort"`
-			}
-		}
-	}
-
-	var r envelopeResponse
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		//return //&results, err
-		c.Data["json"] = map[string]interface{}{"status": 3, "info": "ERR"}
-		c.ServeJSON()
-	}
-
-	results.Total = r.Hits.Total.Value
-
-	if len(r.Hits.Hits) < 1 {
-		// results.Hits = []*Hit{}
-		//return //&results, nil
-		c.Data["json"] = []*Hit{} //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
-		c.ServeJSON()
-	}
-
-	wxsite, err := web.AppConfig.String("wxreqeustsite")
-	if err != nil {
-		logs.Error(err)
-	}
-	var wxsearchresults []*Hit
-	for _, hit := range r.Hits.Hits {
-		var h Hit
-		h.ID = hit.ID
-		h.Sort = hit.Sort
-		//如果是office文件，则/officeview/id，如果是pdf文件，则/pdf?id=
-		//根据id（attatchment id）判断附件类型
-		//h.URL = strings.Join([]string{baseURL, h.ID, ""}, "/")
-		// h.URL = strings.Join([]string{baseURL, h.ID}, "?id=")
-		h.URL = strings.Join([]string{baseURL, h.ID, "&keyword=" + query}, "")
-
-		if err := json.Unmarshal(hit.Source, &h); err != nil {
-			//return //&results, err
-			logs.Error(err)
-			c.Data["json"] = map[string]interface{}{"status": 5, "info": "ERR"}
-			c.ServeJSON()
-		}
-
-		// 对body字段进行缩减
-		//myString.substr(start, 318)
-		//beego.Info(h.Body)
-		h.Body = SubString(h.Body, 0, 300)
-
-		if len(hit.Highlights) > 0 {
-			if err := json.Unmarshal(hit.Highlights, &h.Highlights); err != nil {
-				//return //&results, err
-				c.Data["json"] = map[string]interface{}{"status": 6, "info": "ERR"}
-				c.ServeJSON()
-			}
-		}
-
-		h.ImageURL = wxsite + h.ImageURL
-
-		// results.Hits = append(results.Hits, &h)
-		wxsearchresults = append(wxsearchresults, &h)
-	}
-	// beego.Info(&results)
-	//return &results, nil
-	c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "searchers": &wxsearchresults}
-	// c.Data["json"] = //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
-	c.ServeJSON()
-}
-
 // 后端分页的数据结构
 type StandardTableserver struct {
 	Rows  []Standardmore `json:"rows"`
@@ -620,7 +361,7 @@ func (c *StandardController) StandardPdf() { //search用的是post方法
 
 // @Title dowload standardpdf
 // @Description get standardpdf by id
-// @Param id path string  true "The id of standardpdf"
+// @Param id path string true "The id of standardpdf"
 // @Success 200 {object} models.GetAttachbyId
 // @Failure 400 Invalid page supplied
 // @Failure 404 pdf not found
@@ -1250,6 +991,281 @@ func (c *StandardController) Standard_one_addbaidu() {
 	}
 }
 
+// *******全文检索开始**********
+
+// @Title get standard elasticsearch web
+// @Description get standard elasticsearch web
+// @Success 200 {object} models.GetElastic
+// @Failure 400 Invalid page supplied
+// @Failure 404 Elastic not found
+// @router /getelasticstandard [get]
+// 进入全文搜索主页面
+func (c *StandardController) GetElasticStandard() {
+	// 如果是管理员，出现删除按钮
+	_, _, _, isadmin, _ := checkprodRole(c.Ctx)
+	// rolename, _ = strconv.Atoi(role)
+	// c.Data["Uname"] = uname
+	// c.Data["Username"] = username
+	// c.Data["Ip"] = c.Ctx.Input.IP()
+	// c.Data["role"] = role
+	c.Data["IsAdmin"] = isadmin
+	// c.Data["IsLogin"] = islogin
+
+	u := c.Ctx.Input.UserAgent()
+	matched, err := regexp.MatchString("AppleWebKit.*Mobile.*", u)
+	if err != nil {
+		logs.Error(err)
+	}
+	if matched == true {
+		c.TplName = "standard/index_standard.html"
+	} else {
+		c.TplName = "standard/index_standard.html"
+	}
+}
+
+// @Title get search
+// @Description get earch
+// @Param q query string false "The query="
+// @Param a formData string false "The after..."
+// @Success 200 {object} models.GetSearch
+// @Failure 400 Invalid page supplied
+// @Failure 404 Search not found
+// @router /elasticsearch [get]
+// Search returns results matching a query, paginated by after.
+func (c *StandardController) ElasticSearch() { //(*SearchResults, error)
+	// 3. Search for the indexed documents
+	// Build the request body.
+	query := c.GetString("q")
+	after := c.GetStrings("a")
+	//beego.Info(after)
+	//if query == "" {
+	//	query = "目标"
+	//}
+	// *************
+	// es, err := elasticsearch.NewDefaultClient()
+	// if err != nil {
+	// 	// log.Fatalf("Error creating the client: %s", err)
+	// 	logs.Error(err)
+	// }
+	var results SearchResults
+	//Search returns results matching a query, paginated by after.
+	res, err := es.Search(
+		es.Search.WithIndex(indexName),
+		es.Search.WithBody(buildQuery(query, after...)),
+	)
+	if err != nil {
+		logs.Error(err)
+	}
+	defer res.Body.Close()
+	//log.Printf(res.String())
+
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			//return //&results, err
+			c.Data["json"] = map[string]interface{}{"status": 1, "info": "ERR"}
+			c.ServeJSON()
+		}
+		//return //&results, fmt.Errorf("[%s] %s: %s", res.Status(), e["error"].(map[string]interface{})["type"], e["error"].(map[string]interface{})["reason"])
+		c.Data["json"] = map[string]interface{}{"status": 2, "info": "ERR"}
+		c.ServeJSON()
+	}
+
+	type envelopeResponse struct {
+		Took int
+		Hits struct {
+			Total struct {
+				Value int
+			}
+			Hits []struct {
+				ID         string          `json:"_id"`
+				Source     json.RawMessage `json:"_source"`
+				Highlights json.RawMessage `json:"highlight"`
+				Sort       []interface{}   `json:"sort"`
+			}
+		}
+	}
+
+	var r envelopeResponse
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		//return //&results, err
+		c.Data["json"] = map[string]interface{}{"status": 3, "info": "ERR"}
+		c.ServeJSON()
+	}
+
+	results.Total = r.Hits.Total.Value
+
+	if len(r.Hits.Hits) < 1 {
+		results.Hits = []*Hit{}
+		//return //&results, nil
+		c.Data["json"] = &results //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
+		c.ServeJSON()
+	}
+
+	for _, hit := range r.Hits.Hits {
+		var h Hit
+		h.ID = hit.ID
+		h.Sort = hit.Sort
+		//如果是office文件，则/officeview/id，如果是pdf文件，则/pdf?id=
+		//根据id（attatchment id）判断附件类型
+		//h.URL = strings.Join([]string{baseURL, h.ID, ""}, "/")
+		// h.URL = strings.Join([]string{baseURL, h.ID}, "?id=")
+		h.URL = strings.Join([]string{baseURL, h.ID, "&keyword=" + query}, "")
+
+		if err := json.Unmarshal(hit.Source, &h); err != nil {
+			//return //&results, err
+			logs.Error(err)
+			c.Data["json"] = map[string]interface{}{"status": 5, "info": "ERR"}
+			c.ServeJSON()
+		}
+
+		// 对body字段进行缩减
+		//myString.substr(start, 318)
+		//beego.Info(h.Body)
+		h.Body = SubString(h.Body, 0, 300)
+
+		if len(hit.Highlights) > 0 {
+			if err := json.Unmarshal(hit.Highlights, &h.Highlights); err != nil {
+				//return //&results, err
+				c.Data["json"] = map[string]interface{}{"status": 6, "info": "ERR"}
+				c.ServeJSON()
+			}
+		}
+
+		results.Hits = append(results.Hits, &h)
+	}
+	// beego.Info(&results)
+	//return &results, nil
+	c.Data["json"] = &results //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
+	c.ServeJSON()
+}
+
+// @Title get search
+// @Description get earch
+// @Param keyword query string false "The query="
+// @Param search_after formData string false "paginated by earchpage..."
+// @Success 200 {object} models.GetSearch
+// @Failure 400 Invalid page supplied
+// @Failure 404 Search not found
+// @router /wxelasticsearch [get]
+// Search returns results matching a query, paginated by after.
+func (c *StandardController) WxElasticSearch() { //(*SearchResults, error)
+	// 3. Search for the indexed documents
+	// Build the request body.
+	query := c.GetString("keyword")
+	after := c.GetStrings("search_after")
+	//beego.Info(after)
+	//if query == "" {
+	//	query = "目标"
+	//}
+	// *************
+	// es, err := elasticsearch.NewDefaultClient()
+	// if err != nil {
+	// 	// log.Fatalf("Error creating the client: %s", err)
+	// 	logs.Error(err)
+	// }
+	var results SearchResults
+	//Search returns results matching a query, paginated by after.
+	res, err := es.Search(
+		es.Search.WithIndex(indexName),
+		es.Search.WithBody(buildQuery(query, after...)),
+	)
+	if err != nil {
+		logs.Error(err)
+	}
+	defer res.Body.Close()
+	//log.Printf(res.String())
+
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			//return //&results, err
+			c.Data["json"] = map[string]interface{}{"status": 1, "info": "ERR"}
+			c.ServeJSON()
+		}
+		//return //&results, fmt.Errorf("[%s] %s: %s", res.Status(), e["error"].(map[string]interface{})["type"], e["error"].(map[string]interface{})["reason"])
+		c.Data["json"] = map[string]interface{}{"status": 2, "info": "ERR"}
+		c.ServeJSON()
+	}
+
+	type envelopeResponse struct {
+		Took int
+		Hits struct {
+			Total struct {
+				Value int
+			}
+			Hits []struct {
+				ID         string          `json:"_id"`
+				Source     json.RawMessage `json:"_source"`
+				Highlights json.RawMessage `json:"highlight"`
+				Sort       []interface{}   `json:"sort"`
+			}
+		}
+	}
+
+	var r envelopeResponse
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		//return //&results, err
+		c.Data["json"] = map[string]interface{}{"status": 3, "info": "ERR"}
+		c.ServeJSON()
+	}
+
+	results.Total = r.Hits.Total.Value
+
+	if len(r.Hits.Hits) < 1 {
+		// results.Hits = []*Hit{}
+		//return //&results, nil
+		c.Data["json"] = []*Hit{} //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
+		c.ServeJSON()
+	}
+
+	wxsite, err := web.AppConfig.String("wxreqeustsite")
+	if err != nil {
+		logs.Error(err)
+	}
+	var wxsearchresults []*Hit
+	for _, hit := range r.Hits.Hits {
+		var h Hit
+		h.ID = hit.ID
+		h.Sort = hit.Sort
+		//如果是office文件，则/officeview/id，如果是pdf文件，则/pdf?id=
+		//根据id（attatchment id）判断附件类型
+		//h.URL = strings.Join([]string{baseURL, h.ID, ""}, "/")
+		// h.URL = strings.Join([]string{baseURL, h.ID}, "?id=")
+		h.URL = strings.Join([]string{baseURL, h.ID, "&keyword=" + query}, "")
+
+		if err := json.Unmarshal(hit.Source, &h); err != nil {
+			//return //&results, err
+			logs.Error(err)
+			c.Data["json"] = map[string]interface{}{"status": 5, "info": "ERR"}
+			c.ServeJSON()
+		}
+
+		// 对body字段进行缩减
+		//myString.substr(start, 318)
+		//beego.Info(h.Body)
+		h.Body = SubString(h.Body, 0, 300)
+
+		if len(hit.Highlights) > 0 {
+			if err := json.Unmarshal(hit.Highlights, &h.Highlights); err != nil {
+				//return //&results, err
+				c.Data["json"] = map[string]interface{}{"status": 6, "info": "ERR"}
+				c.ServeJSON()
+			}
+		}
+
+		h.ImageURL = wxsite + h.ImageURL
+
+		// results.Hits = append(results.Hits, &h)
+		wxsearchresults = append(wxsearchresults, &h)
+	}
+	// beego.Info(&results)
+	//return &results, nil
+	c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "searchers": &wxsearchresults}
+	// c.Data["json"] = //map[string]interface{}{"status": 1, "info": "SUCCESS", "id": aid}
+	c.ServeJSON()
+}
+
 // @Title upload file to standard html
 // @Description get upload file to standard html
 // @Success 200 {object} models.Elastic
@@ -1355,28 +1371,28 @@ func (c *StandardController) Upload() {
 		if PathisExist(filepath) {
 			c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件已存在！"}
 			c.ServeJSON()
-			return
-		}
-
-		//保存附件
-		if category != "" {
-			err := os.MkdirAll("./attachment/standard/"+category, 0777) //..代表本当前exe文件目录的上级，.表示当前目录，没有.表示盘的根目录
-			if err != nil {
-				logs.Error(err)
+			// return
+		} else {
+			//保存附件
+			if category != "" {
+				err := os.MkdirAll("./attachment/standard/"+category, 0777) //..代表本当前exe文件目录的上级，.表示当前目录，没有.表示盘的根目录
+				if err != nil {
+					logs.Error(err)
+				}
 			}
-		}
-		file_path = "./attachment/standard/" + category + "/" + clean_file_name
-		err = c.SaveToFile("input-ke-2[]", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
-		if err != nil {
-			// logs.Error(err)
-			c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件保存错误！"}
+			file_path = "./attachment/standard/" + category + "/" + clean_file_name
+			err = c.SaveToFile("input-ke-2[]", file_path) //.Join("attachment", attachment)) //存文件    WaterMark(path)    //给文件加水印
+			if err != nil {
+				// logs.Error(err)
+				c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "文件保存错误！"}
+				c.ServeJSON()
+				// return
+			}
+			//filesize, _ = FileSize(filepath)
+			//filesize = filesize / 1000.0
+			c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": standard.Route}
 			c.ServeJSON()
-			return
 		}
-		//filesize, _ = FileSize(filepath)
-		//filesize = filesize / 1000.0
-		c.Data["json"] = map[string]interface{}{"state": "SUCCESS", "title": clean_file_name, "original": clean_file_name, "url": standard.Route}
-		c.ServeJSON()
 	}
 
 	cwd, _ := os.Getwd()
@@ -1437,7 +1453,7 @@ func (c *StandardController) Upload() {
 
 	doc := &Document{
 		//是productid还是attachmentid
-		ID: strconv.FormatInt(sid, 10),
+		ID: strconv.FormatInt(sid, 10), // 将int64整数转换为字符串
 		// ImageURL:  "/static/images/" + strconv.Itoa(rand.Intn(8)) + "s.jpg", //1s.jpg
 		ImageURL:  "/static/images/" + fileName + "1" + onameexp,
 		Published: today_str, //fmt.Sprintf("%04d-%02d-%02d", jYear, jMonth, jDay),
@@ -1449,12 +1465,74 @@ func (c *StandardController) Upload() {
 	if err != nil {
 		// log.Fatalln(err)
 		logs.Error(err)
+		// 记录version冲突
+		utils.FileLogs.Info(indexName + ":" + h.Filename + ":" + err.Error())
 		c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "加入全文检索elastic错误！"}
 		c.ServeJSON()
 		return
 	}
+	utils.FileLogs.Info(indexName + ":" + h.Filename + ":ok成功！")
+	c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "加入全文检索elastic成功！"}
+	c.ServeJSON()
 }
 
+// @Title post delete elasticsearch
+// @Description delete delete elasticsearch
+// @Param id path string true "The id of elasticsearch document"
+// @Success 200 {object} models.GetEsSearch
+// @Failure 400 Invalid page supplied
+// @Failure 404 Search not found
+// @router /deleteelasticsearch/:id [delete]
 // 全文检索删除，根据id
+func (c *StandardController) DeleteElasticSearch() {
+	//
+	// client, err := newClient()
+	// if err != nil {
+	//    panic(err)
+	// }
+
+	id := c.Ctx.Input.Param(":id")
+	//pid转成64为
+	// idNum, err := strconv.ParseInt(id, 10, 64)
+	// if err != nil {
+	// 	logs.Error(err)
+	// }
+
+	deleteDoc := es.Delete
+	response, err := deleteDoc(indexName, id, deleteDoc.WithPretty())
+	if err != nil {
+		logs.Error(err)
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "删除全文检索elastic错误！"}
+		c.ServeJSON()
+	}
+	logs.Info(response)
+	c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "data": "删除全文检索elastic成功！"}
+	c.ServeJSON()
+}
+
+// @Title post delete elasticsearch
+// @Description delete delete elasticsearch
+// @Param id path string true "The id of elasticsearch document"
+// @Success 200 {object} models.GetEsSearch
+// @Failure 400 Invalid page supplied
+// @Failure 404 Search not found
+// @router /deleteelasticall [delete]
+// 全文检索删除，根据id
+func (c *StandardController) DeleteElasticAll() {
+	deleteDoc := es.Delete
+	for i := 1; i <= 1404; i++ {
+		_, err := deleteDoc(indexName, strconv.Itoa(i), deleteDoc.WithPretty())
+		if err != nil {
+			logs.Error(err)
+			// c.Data["json"] = map[string]interface{}{"info": "ERROR", "data": "删除全文检索elastic错误！"}
+			// c.ServeJSON()
+		}
+	}
+
+	// logs.Info(len(response.Succeeded()))
+	c.Data["json"] = map[string]interface{}{"info": "SUCCESS", "data": "删除全文检索elastic成功！"}
+	c.ServeJSON()
+}
 
 // 全文检索更新
+// *******全文检索结束**********

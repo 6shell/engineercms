@@ -2392,6 +2392,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:ImportStandardController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:ImportStandardController"],
+        beego.ControllerComments{
+            Method: "Scan",
+            Router: `/scan`,
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:LocationController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:LocationController"],
         beego.ControllerComments{
             Method: "AddLocationNavigate",
@@ -2442,6 +2451,15 @@ func init() {
             Method: "LoginPost",
             Router: `/loginpost`,
             AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:LoginController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:LoginController"],
+        beego.ControllerComments{
+            Method: "Logout",
+            Router: `/logout`,
+            AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
@@ -2547,6 +2565,15 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"],
         beego.ControllerComments{
+            Method: "Mapus",
+            Router: `/mapus`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"],
+        beego.ControllerComments{
             Method: "Postdata",
             Router: `/postdata`,
             AllowHTTPMethods: []string{"post"},
@@ -2558,6 +2585,15 @@ func init() {
         beego.ControllerComments{
             Method: "Security",
             Router: `/security`,
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:MainController"],
+        beego.ControllerComments{
+            Method: "Terrain",
+            Router: `/terrain`,
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,
@@ -3558,6 +3594,24 @@ func init() {
             Method: "Threejs",
             Router: `/threejs`,
             AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:StandardController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:StandardController"],
+        beego.ControllerComments{
+            Method: "DeleteElasticAll",
+            Router: `/deleteelasticall`,
+            AllowHTTPMethods: []string{"delete"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:StandardController"] = append(beego.GlobalControllerRouter["github.com/3xxx/engineercms/controllers:StandardController"],
+        beego.ControllerComments{
+            Method: "DeleteElasticSearch",
+            Router: `/deleteelasticsearch/:id`,
+            AllowHTTPMethods: []string{"delete"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})

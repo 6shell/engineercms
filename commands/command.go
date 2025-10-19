@@ -318,11 +318,13 @@ func ResolveCommand(args []string) {
 		}
 	}
 	if err := gocaptcha.ReadFonts(conf.WorkingDir("static", "fonts"), ".ttf"); err != nil {
-		log.Fatal("读取字体文件时出错 -> ", err)
+		// log.Fatal("读取字体文件时出错 -> ", err)
+		logs.Error(err)
 	}
 
 	if err := web.LoadAppConfig("ini", conf.ConfigurationFile); err != nil {
-		log.Fatal("An error occurred:", err)
+		// log.Fatal("An error occurred:", err)
+		logs.Error(err)
 	}
 	if conf.LogFile == "" {
 		logPath, err := filepath.Abs(web.AppConfig.DefaultString("log_path", conf.WorkingDir("runtime", "logs")))
@@ -350,10 +352,12 @@ func ResolveCommand(args []string) {
 	fonts := conf.WorkingDir("static", "fonts")
 
 	if !filetil.FileExists(fonts) {
-		log.Fatal("Font path not exist.")
+		// log.Fatal("Font path not exist.")
+		logs.Info("Font path not exist.")
 	}
 	if err := gocaptcha.ReadFonts(filepath.Join(conf.WorkingDirectory, "static", "fonts"), ".ttf"); err != nil {
-		log.Fatal("读取字体失败 ->", err)
+		// log.Fatal("读取字体失败 ->", err)
+		logs.Error(err)
 	}
 
 	// RegisterDataBase()

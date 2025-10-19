@@ -14,7 +14,7 @@ import (
 	"github.com/3xxx/engineercms/models"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/beego/beego/v2/server/web/context" //用这个context，不是adapter
+	"github.com/beego/beego/v2/server/web/context" // 用这个context，不是adapter
 	mrand "math/rand"
 	"net/http"
 	"regexp"
@@ -261,6 +261,8 @@ func (c *LoginController) LoginPost() {
 
 	if err := json.NewDecoder(c.Ctx.Request.Body).Decode(&request); err != nil {
 		logs.Error("无效的请求格式")
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "无效的请求格式", "data": "无效的请求格式"}
+		c.ServeJSON()
 		return
 	}
 
@@ -268,12 +270,16 @@ func (c *LoginController) LoginPost() {
 	usernameCipher, err := base64.StdEncoding.DecodeString(request.Username)
 	if err != nil {
 		logs.Error("用户名解码失败")
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "用户名解码失败", "data": "用户名解码失败"}
+		c.ServeJSON()
 		return
 	}
 
 	passwordCipher, err := base64.StdEncoding.DecodeString(request.Password)
 	if err != nil {
 		logs.Error("密码解码失败")
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "密码解码失败", "data": "密码解码失败"}
+		c.ServeJSON()
 		return
 	}
 
@@ -281,17 +287,21 @@ func (c *LoginController) LoginPost() {
 	username, err := decrypt(usernameCipher)
 	if err != nil {
 		logs.Error("用户名解密失败")
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "用户名解密失败", "data": "用户名解密失败"}
+		c.ServeJSON()
 		return
 	}
 
 	password, err := decrypt(passwordCipher)
 	if err != nil {
 		logs.Error("密码解密失败")
+		c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "密码解密失败", "data": "密码解密失败"}
+		c.ServeJSON()
 		return
 	}
 
 	// 验证逻辑（示例）
-	logs.Info("解密凭证: 用户名=%s 密码=%s", username, password)
+	// logs.Info("解密凭证: 用户名=%s 密码=%s", username, password)
 
 	var user models.User
 	islogin := 0
@@ -326,6 +336,8 @@ func (c *LoginController) LoginPost() {
 		if err != nil {
 			logs.Error(err)
 			utils.FileLogs.Error(user.Username + " 查询用户 " + err.Error())
+			c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "查询用户失败", "data": "查询用户失败"}
+			c.ServeJSON()
 		}
 		c.SetSession("uname", user.Username)
 		userid_str := strconv.FormatInt(user.Id, 10)
@@ -335,6 +347,8 @@ func (c *LoginController) LoginPost() {
 			if err != nil {
 				logs.Error(err)
 				utils.FileLogs.Error(user.Username + " 添加用户ip " + err.Error())
+				c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "更新用户IP失败", "data": "更新用户IP失败"}
+				c.ServeJSON()
 			}
 		} else {
 			//更新user表的lastlogintime
@@ -342,6 +356,8 @@ func (c *LoginController) LoginPost() {
 			if err != nil {
 				logs.Error(err)
 				utils.FileLogs.Error(user.Username + " 更新用户登录时间 " + err.Error())
+				c.Data["json"] = map[string]interface{}{"info": "ERROR", "state": "ERROR", "msg": "更新用户登录时间失败", "data": "更新用户登录时间失败"}
+				c.ServeJSON()
 			}
 		}
 		islogin = 1
@@ -350,6 +366,12 @@ func (c *LoginController) LoginPost() {
 	}
 }
 
+// @Title get user logout...
+// @Description get logout..
+// @Success 200 {object} logout
+// @Failure 400 Invalid page supplied
+// @Failure 404 data not found
+// @router /logout [get]
 // 退出登录
 func (c *LoginController) Logout() {
 	// site := c.Ctx.Input.Site() + ":" + strconv.Itoa(c.Ctx.Input.Port())

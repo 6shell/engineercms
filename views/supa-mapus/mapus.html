@@ -172,7 +172,7 @@
     <div class="more-item" id="geojson">Export to GeoJSON</div>
     <div class="more-item" id="importgeojson">Import GeoJSON File</div>
     <div class="more-item" id="xmltogeojson">Xml To GeoJSON File</div>
-    <div class="more-item" id="downloadmap">Download BingMap</div>
+    <!-- <div class="more-item" id="downloadmap">Download BingMap</div> -->
     <div class="more-item" id="share-button">Share</div>
     <div class="more-item" id="sign-button">Sign</div>
     <div class="more-item" id="clear-button">Clear</div>
@@ -239,7 +239,7 @@
       </div>
     </div>
     <div class="section copyright-bottom" id="attribution-section">
-      <div class="section-name">Made by Alyssa X &3xxx</div>
+      <div class="section-name">Made by Alyssa X & 3xxx</div>
       <!-- <div id="attribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors</div> -->
       <div id="attribution">© <a href="https://www.microsoft.com/en-us/maps" target="_blank">Bing Maps</a> contributors</div>
     </div>
@@ -385,18 +385,22 @@
   <!-- <script src="https://unpkg.com/gcoord@0.3.2/dist/gcoord.js"></script> -->
   <script src="/static/supa-mapus/gcoord.js"></script>
 
-  <script src="/static/supa-mapus/leaflet-bing-layer.js"></script>
+  <!-- <script src="/static/supa-mapus/leaflet-bing-layer.js"></script> -->
   <script src="/static/supa-mapus/leaflet.measure.js"></script>
-  <script src="/static/supa-mapus/bingdownload.js"></script>
+  <!-- <script src="/static/supa-mapus/bingdownload.js"></script> -->
   <!-- <script src="https://unpkg.com/regenerator-runtime"></script> -->
   <script src="/static/supa-mapus/runtime.js"></script>
   <!-- <script src="https://unpkg.com/leaflet-topography"></script> -->
   <script src="/static/supa-mapus/leaflet-topography.js"></script>
   <!-- <script src="https://unpkg.com/@raruto/leaflet-elevation@2.2.8/dist/leaflet-elevation.min.js"></script> -->
   <script src="/static/supa-mapus/leaflet-elevation.min.js"></script>
-  <script src="/static/supa-mapus/main-shen6.min.js"></script>
+  <script src="/static/supa-mapus/main-shen6.js"></script>
   <script src="/static/supa-mapus/layer/layer.js"></script> 
   <!-- <script src="/static/supa-mapus/main-shen3.min.js"></script> -->
+
+  <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+  <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.js"></script>
+
   <script>
   // 隐藏侧栏
   function init() {
@@ -542,6 +546,69 @@
     //浏览器端去导航
     new H5Navigation(target_lng, target_lat).getLocation();
   }
+
+  // 搜索位置后追加到搜索框下面
+  // 模拟数据和方法
+  // let searchResult = {
+  //   data: null
+  // };
+
+  // 获取输入框和结果容器
+  // const searchInput = document.getElementById('searchInput');
+  // const searchResultContainer = document.getElementById('searchResult');
+  // const noDataDiv = document.getElementById('noData');
+
+  // 点中某个结果
+  // function clickMarker(item) {
+  //   setMarker(item.lonlat.split(','));
+  //   myView.setCenter(item.lonlat.split(','));
+  //   searchInput.value = '';
+  //   searchResult.data = null;
+  //   renderSearchResults();
+  // }
+
+  // 渲染搜索结果
+  // function renderSearchResults() {
+  //   searchResultContainer.innerHTML = ''; // 清空现有结果
+  //   if (searchResult.data === null || searchResult.data.length === 0) {
+  //     noDataDiv.style.display = 'block';
+  //   } else {
+  //     noDataDiv.style.display = 'none';
+  //     searchResult.data.forEach((item, index) => {
+  //       const resultItem = document.createElement('div');
+  //       resultItem.className = 'my-search-result-item';
+  //       resultItem.textContent = item.name;
+  //       resultItem.onclick = () => clickMarker(item);
+  //       searchResultContainer.appendChild(resultItem);
+  //     });
+  //   }
+  // }
+
+  // 搜索处理函数
+  // function searchHandle() {
+  //   const keyword = searchInput.value;
+  //   const url = 'https://api.example.com/search'; // 替换为实际的API URL
+  //   // 使用 $.ajax 发起 GET 请求
+  //   $.ajax({
+  //     url: url,
+  //     type: 'GET',
+  //     data: {
+  //       keyWord: keyword
+  //     },
+  //     success: function(res) {
+  //       console.log(res.pois);
+  //       if (res.pois) {
+  //         searchResult.data = res.pois;
+  //       } else {
+  //         searchResult.data = null;
+  //       }
+  //       renderSearchResults();
+  //     },
+  //     error: function(xhr, status, error) {
+  //       console.error('请求失败:', status, error);
+  //     }
+  //   });
+  // }
 
   // http://api.map.baidu.com/direction?origin=latlng:34.264642646862,108.95108518068|name:我家&destination=大雁塔&mode=driving&region=西安&output=html&src=webapp.baidu.openAPIdemo
 

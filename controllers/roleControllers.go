@@ -11,7 +11,7 @@ import (
 	beegoormadapter "github.com/casbin/beego-orm-adapter/v3"
 	"github.com/casbin/casbin/v2"
 
-	"github.com/casbin/xorm-adapter/v2"
+	// "github.com/casbin/xorm-adapter/v2"
 	// _ "github.com/go-sql-driver/mysql"
 	// _ "github.com/mattn/go-sqlite3"
 
@@ -77,21 +77,21 @@ func init() {
 		logs.Error(err)
 	}
 	switch db_type {
-	case "mysql":
-		// dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/", db_user, db_pass, db_host, db_port, db_name)
-		dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/", db_user, db_pass, db_host, db_port)
-		// a = beegoormadapter.NewAdapter("mysql", dns)
-		//因为beegoormadapter里需要手动调整mysql和sqlite，所以，如果是mysql，就用xorm
-		// Initialize a Xorm adapter and use it in a Casbin enforcer:
-		// The adapter will use the MySQL database named "casbin".
-		// If it doesn't exist, the adapter will create it automatically.
-		// a := xormadapter.NewAdapter("mysql", "mysql_username:mysql_password@tcp(127.0.0.1:3306)/") // Your driver and data source.
-		a, err := xormadapter.NewAdapter("mysql", dns)
-		if err != nil {
-			logs.Error(err)
-		}
-		e, _ = casbin.NewEnforcer("conf/rbac_model.conf", a)
-		break
+	// case "mysql":
+	// 	// dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/", db_user, db_pass, db_host, db_port, db_name)
+	// 	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/", db_user, db_pass, db_host, db_port)
+	// 	// a = beegoormadapter.NewAdapter("mysql", dns)
+	// 	//因为beegoormadapter里需要手动调整mysql和sqlite，所以，如果是mysql，就用xorm
+	// 	// Initialize a Xorm adapter and use it in a Casbin enforcer:
+	// 	// The adapter will use the MySQL database named "casbin".
+	// 	// If it doesn't exist, the adapter will create it automatically.
+	// 	// a := xormadapter.NewAdapter("mysql", "mysql_username:mysql_password@tcp(127.0.0.1:3306)/") // Your driver and data source.
+	// 	a, err := xormadapter.NewAdapter("mysql", dns)
+	// 	if err != nil {
+	// 		logs.Error(err)
+	// 	}
+	// 	e, _ = casbin.NewEnforcer("conf/rbac_model.conf", a)
+	// 	break
 	case "postgres":
 		// orm.RegisterDriver("postgres", orm.DRPostgres)
 		dns = fmt.Sprintf("dbname=%s host=%s  user=%s  password=%s  port=%s  sslmode=%s", db_name, db_host, db_user, db_pass, db_port, db_sslmode)

@@ -15,6 +15,12 @@
       },
 
       isBottom: false,
+      isAdmin: false,
+      showLoginDialog: false,
+      loginForm: {
+        username: '',
+        password: ''
+      },
 
       query: '',
       results: [],
@@ -125,6 +131,229 @@
 
       toggle: function(event) {
         event.currentTarget.closest('div.result').classList.toggle('expanded')
+      },
+      
+      toggleAdminMode: function() {
+        var self = this
+        
+        // 如果已经是管理员模式，直接退出
+        if (this.isAdmin) {
+          this.logoutAdmin()
+          return
+        }
+        
+        // 显示登录对话框
+        this.showLoginDialog = true
+      },
+      
+      adminLogin: function() {
+        var self = this
+        
+        // 发送登录请求到服务端API
+        window.fetch('/v1/wx/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: this.loginForm.username,
+            password: this.loginForm.password
+          })
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            return Promise.reject(response)
+          }
+          return response.json()
+        })
+        .then(function(data) {
+          // 登录成功
+          if (data.success) {
+            self.isAdmin = true
+            self.showLoginDialog = false
+            self.loginForm.username = ''
+            self.loginForm.password = ''
+            console.log('管理员登录成功')
+            alert('管理员登录成功！')
+          } else {
+            alert('登录失败：' + (data.message || '用户名或密码错误'))
+          }
+        })
+        .catch(function(error) {
+          console.error('登录失败:', error)
+          
+          // 如果后端API不支持管理员登录，提供备选方案
+          if (error.status === 404) {
+            alert('后端管理员API暂不可用，使用本地验证模式')
+            // 本地验证（仅用于演示，生产环境应使用服务端验证）
+            if (self.loginForm.username === 'admin' && self.loginForm.password === 'admin123') {
+              self.isAdmin = true
+              self.showLoginDialog = false
+              self.loginForm.username = ''
+              self.loginForm.password = ''
+              alert('管理员登录成功（本地验证模式）！')
+            } else {
+              alert('用户名或密码错误（默认：admin/admin123）')
+            }
+          } else {
+            alert('登录失败，请检查网络连接或联系系统管理员')
+          }
+        })
+      },
+      
+      cancelLogin: function() {
+        this.showLoginDialog = false
+        this.loginForm.username = ''
+        this.loginForm.password = ''
+      },
+      
+      logoutAdmin: function() {
+        var self = this
+        
+        // 发送退出登录请求
+        window.fetch('/v1/wx/logout', {
+          method: 'get'
+        })
+        .then(function(response) {
+          // 无论成功与否都退出管理员模式
+          self.isAdmin = false
+          console.log('退出管理员模式')
+          alert('已退出管理员模式')
+        })
+        .catch(function(error) {
+          // 即使API调用失败也退出管理员模式
+          self.isAdmin = false
+          console.log('退出管理员模式')
+          alert('已退出管理员模式')
+        })
+      },
+      
+      checkAdminSession: function() {
+        var self = this
+        
+        // 检查本地存储中是否有管理员会话
+        // var adminSession = localStorage.getItem('elasticsearch_admin_session')
+        // if (adminSession) {
+          // 验证会话是否有效
+          // window.fetch('/v1/wx/admin/check-session', {
+          window.fetch('/v1/wx/islogin', {
+            // headers: {
+            //   'Authorization': 'Bearer ' + adminSession
+            // }
+          })
+          .then(function(response) {
+            if (response.ok) {
+              return response.json()
+            }
+            return Promise.reject(response)
+          })
+          .then(function(data) {
+            // if (data.valid) {
+            if (data.isadmin) {
+              self.isAdmin = true
+              console.log('管理员会话有效')
+            }
+          })
+          .catch(function(error) {
+            // 会话无效，清除本地存储
+            localStorage.removeItem('elasticsearch_admin_session')
+            console.log('管理员会话已过期')
+          })
+        // }
+      },
+      
+      deleteResult: function(resultId) {
+        var self = this
+        
+        // 确认删除
+        if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) {
+          return
+        }
+        
+        // 发送删除请求到后端API
+        window.fetch(`/v1/wx/deleteelasticsearch/${resultId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            return Promise.reject(response)
+          }
+          return response.json()
+        })
+        .then(function(response) {
+          // 从前端移除已删除的记录
+          self.results = self.results.filter(function(result) {
+            return result.id !== resultId
+          })
+          self.total = self.total - 1
+          
+          // 显示成功消息
+          alert('记录删除成功！')
+        })
+        .catch(function(error) {
+          console.error('删除失败:', error)
+          alert('删除失败，请稍后重试。')
+          
+          // 如果后端API不支持删除，提供备选方案
+          if (error.status === 404 || error.status === 405) {
+            alert('后端API暂不支持删除功能，已从前端临时移除该记录。刷新页面后会恢复。')
+            // 临时从前端移除记录
+            self.results = self.results.filter(function(result) {
+              return result.id !== resultId
+            })
+            self.total = self.total - 1
+          }
+        })
+      },
+
+      deleteElasticAll: function(resultId) {
+        var self = this
+        
+        // 确认删除
+        if (!confirm('确定要删除所有记录吗？此操作不可撤销。')) {
+          return
+        }
+        
+        // 发送删除请求到后端API
+        window.fetch(`/v1/wx/deleteelasticall`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            return Promise.reject(response)
+          }
+          return response.json()
+        })
+        .then(function(response) {
+          // 从前端移除已删除的记录
+          self.results = self.results.filter(function(result) {
+            return result.id !== resultId
+          })
+          self.total = self.total - 1
+          
+          // 显示成功消息
+          alert('记录删除成功！')
+        })
+        .catch(function(error) {
+          console.error('删除失败:', error)
+          alert('删除失败，请稍后重试。')
+          
+          // 如果后端API不支持删除，提供备选方案
+          if (error.status === 404 || error.status === 405) {
+            alert('后端API暂不支持删除功能，已从前端临时移除该记录。刷新页面后会恢复。')
+            // 临时从前端移除记录
+            self.results = self.results.filter(function(result) {
+              return result.id !== resultId
+            })
+            self.total = self.total - 1
+          }
+        })
       }
     },
 
@@ -148,6 +377,9 @@
       var q = document.location.search.split('q=')[1]
       if (q) { self.query = decodeURIComponent(q) }
       self.loadResults()
+
+      // 检查管理员会话状态
+      this.checkAdminSession()
 
       window.onscroll = function() {
         self.isBottom = (document.documentElement.scrollTop || document.body.scrollTop) + window.innerHeight === document.documentElement.scrollHeight

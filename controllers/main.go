@@ -629,10 +629,6 @@ func (c *MainController) Autodesk() {
 	c.TplName = "autodeskview.tpl"
 }
 
-func (c *MainController) Mapus() {
-	c.TplName = "supa-mapus/mapus.html"
-}
-
 func (c *MainController) Vue() {
 	c.TplName = "vue/vue.tpl"
 	c.Data["Title"] = "微信支付111"

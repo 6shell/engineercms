@@ -6626,6 +6626,77 @@
                 }
             }
         },
+        "/freecad/assembly/{id}": {
+            "get": {
+                "tags": [
+                    "freecad"
+                ],
+                "description": "get freecad Assembly by id...\n\u003cbr\u003e",
+                "operationId": "FreeCADController.get freecad Assembly by id...",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of freecad Assembly",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.FreecadModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
+        "/freecad/changegroupname/{id}": {
+            "post": {
+                "tags": [
+                    "freecad"
+                ],
+                "description": "post change groupname of value array\n\u003cbr\u003e",
+                "operationId": "FreeCADController.post change groupname of value array",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of freecad model",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "modelid_groupname",
+                        "description": "The modelid_groupname of freecadmodel",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/freecad"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
         "/freecad/deletefreecad": {
             "post": {
                 "tags": [
@@ -6658,7 +6729,7 @@
                 }
             }
         },
-        "/freecad/editfcmodel": {
+        "/freecad/editfcmodel_back": {
             "post": {
                 "tags": [
                     "freecad"
@@ -6946,7 +7017,7 @@
                 }
             }
         },
-        "/freecad/online3deditor": {
+        "/freecad/online3deditor/{id}": {
             "get": {
                 "tags": [
                     "freecad"
@@ -6955,16 +7026,16 @@
                 "operationId": "FreeCADController.get online3deditor",
                 "parameters": [
                     {
-                        "in": "query",
-                        "name": "model",
-                        "description": "The model url",
+                        "in": "path",
+                        "name": "id",
+                        "description": "The model id",
                         "required": true,
                         "type": "string"
                     },
                     {
                         "in": "query",
-                        "name": "id",
-                        "description": "The model id",
+                        "name": "model",
+                        "description": "The model url",
                         "required": true,
                         "type": "string"
                     }
@@ -7130,6 +7201,59 @@
                 }
             }
         },
+        "/freecad/updatevalue": {
+            "post": {
+                "tags": [
+                    "freecad"
+                ],
+                "description": "post freecad value\n\u003cbr\u003e",
+                "operationId": "FreeCADController.post freecad value",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of freecad model",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "name",
+                        "description": "The name of value",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "vaue",
+                        "description": "The value",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "pk",
+                        "description": "The pk of value",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.FreecadModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
         "/freecad/uploadmodel": {
             "get": {
                 "tags": [
@@ -7165,6 +7289,77 @@
                         "description": "",
                         "schema": {
                             "$ref": "#/definitions/freecad"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
+        "/freecad/valuearray/{id}": {
+            "get": {
+                "tags": [
+                    "freecad"
+                ],
+                "description": "get freecad value array by id \u0026 groupname...\n\u003cbr\u003e",
+                "operationId": "FreeCADController.get freecad value array by modelid \u0026 groupname...",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of freecad model",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "groupname",
+                        "description": "The name of valuegroup",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.FreecadModel"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
+        "/freecad/valuegroup/{id}": {
+            "get": {
+                "tags": [
+                    "freecad"
+                ],
+                "description": "get freecad value group by id...\n\u003cbr\u003e",
+                "operationId": "FreeCADController.get freecad value group by modelid...",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of freecad model",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.FreecadModel"
                         }
                     },
                     "400": {
@@ -11870,6 +12065,70 @@
                 }
             }
         },
+        "/wx/deleteelasticall": {
+            "delete": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "delete delete elasticsearch\n\u003cbr\u003e",
+                "operationId": "StandardController.post delete elasticsearch",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of elasticsearch document",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetEsSearch"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "Search not found"
+                    }
+                }
+            }
+        },
+        "/wx/deleteelasticsearch/{id}": {
+            "delete": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "delete delete elasticsearch\n\u003cbr\u003e",
+                "operationId": "StandardController.post delete elasticsearch",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "The id of elasticsearch document",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetEsSearch"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "Search not found"
+                    }
+                }
+            }
+        },
         "/wx/deleteuser": {
             "post": {
                 "tags": [
@@ -13882,6 +14141,52 @@
                 }
             }
         },
+        "/wx/logout": {
+            "get": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "get logout..\n\u003cbr\u003e",
+                "operationId": "LoginController.get user logout...",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/logout"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "data not found"
+                    }
+                }
+            }
+        },
+        "/wx/mapus": {
+            "get": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "get mapus web\n\u003cbr\u003e",
+                "operationId": "MainController.get mapus web",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetMapus"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "location not found"
+                    }
+                }
+            }
+        },
         "/wx/mathpdf/{id}": {
             "get": {
                 "tags": [
@@ -14255,6 +14560,34 @@
                     },
                     "404": {
                         "description": "pay not found"
+                    }
+                }
+            }
+        },
+        "/wx/scan": {
+            "post": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "扫描指定目录中的PDF文件\n\u003cbr\u003e",
+                "operationId": "ImportStandardController.ScanPDFDirectory",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "扫描请求参数",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ScanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ScanResponse"
+                        }
                     }
                 }
             }
@@ -14806,6 +15139,29 @@
                     },
                     "404": {
                         "description": "cart not found"
+                    }
+                }
+            }
+        },
+        "/wx/terrain": {
+            "get": {
+                "tags": [
+                    "wx"
+                ],
+                "description": "get terrain web\n\u003cbr\u003e",
+                "operationId": "MainController.get terrain web",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.GetMapus"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid page supplied"
+                    },
+                    "404": {
+                        "description": "location not found"
                     }
                 }
             }
@@ -16451,6 +16807,112 @@
             "title": "SUCCESS",
             "type": "object"
         },
+        "controllers.PDFFileInfo": {
+            "title": "PDFFileInfo",
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "format": "datetime"
+                },
+                "file_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "file_path": {
+                    "type": "string"
+                },
+                "file_size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "format": "datetime"
+                }
+            }
+        },
+        "controllers.ScanRequest": {
+            "title": "ScanRequest",
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string"
+                },
+                "max_workers": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "controllers.ScanResponse": {
+            "title": "ScanResponse",
+            "type": "object",
+            "properties": {
+                "duration": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "existing_files": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "new_files": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.ScanResult"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total_files": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "controllers.ScanResult": {
+            "title": "ScanResult",
+            "type": "object",
+            "properties": {
+                "Error": {
+                    "$ref": "#/definitions/controllers.error"
+                },
+                "Exists": {
+                    "type": "boolean"
+                },
+                "PDFFile": {
+                    "$ref": "#/definitions/controllers.PDFFileInfo"
+                },
+                "RecordID": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "controllers.error": {
+            "title": "error",
+            "type": "object"
+        },
         "freecad": {
             "title": "freecad",
             "type": "object"
@@ -16482,6 +16944,10 @@
         },
         "login": {
             "title": "login",
+            "type": "object"
+        },
+        "logout": {
+            "title": "logout",
             "type": "object"
         },
         "models.AddAdminCategory": {
@@ -17365,7 +17831,8 @@
                     "format": "datetime"
                 },
                 "User": {
-                    "$ref": "#/definitions/models.User"
+                    "$ref": "#/definitions/models.User",
+                    "description": "不加这句就无法自动建表"
                 },
                 "UserID": {
                     "description": "外键 (属于), tag `index`是为该列创建索引",
@@ -17387,6 +17854,10 @@
                 "faceimgurl": {
                     "type": "string"
                 },
+                "groupnameindex": {
+                    "type": "integer",
+                    "format": "int64"
+                },
                 "indicators": {
                     "type": "string"
                 },
@@ -17396,10 +17867,16 @@
                 "number": {
                     "type": "string"
                 },
+                "partname": {
+                    "type": "string"
+                },
                 "professional": {
                     "type": "string"
                 },
                 "renderimgurl": {
+                    "type": "string"
+                },
+                "spreadsheetname": {
                     "type": "string"
                 },
                 "status": {
@@ -17456,6 +17933,10 @@
             "title": "GetElastic",
             "type": "object"
         },
+        "models.GetEsSearch": {
+            "title": "GetEsSearch",
+            "type": "object"
+        },
         "models.GetEstimateCostArchi": {
             "title": "GetEstimateCostArchi",
             "type": "object"
@@ -17490,6 +17971,10 @@
         },
         "models.GetLocationPage": {
             "title": "GetLocationPage",
+            "type": "object"
+        },
+        "models.GetMapus": {
+            "title": "GetMapus",
             "type": "object"
         },
         "models.GetMathPage": {

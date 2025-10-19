@@ -72,6 +72,12 @@ func init() {
 	es, err = elasticsearch.NewClient(config)
 	checkError(err)
 
+	// client, err := elastic.NewClient(
+	// 	elastic.SetURL("http://127.0.0.1:9200"), // 支持多个服务地址，逗号分隔
+	// 	elastic.SetBasicAuth("user_name", "user_password"),
+	// 	elastic.SetSniff(false), // 跳过ip检查，默认是true
+	// )
+
 	flag.StringVar(&indexName, "index", "standard-index", "Index name")
 	//flag.IntVar(&numWorkers, "workers", runtime.NumCPU(), "Number of indexer workers")
 	//flag.IntVar(&flushBytes, "flush", 5e+6, "Flush threshold in bytes")
@@ -1082,7 +1088,7 @@ func esapisearch() {
 	log.Println(response)
 }
 
-// 一下作废，非官方用法
+// ********以下作废，非官方用法********
 func failOnError(err error, msg string) {
 	if err != nil {
 		// log.Fatalf("%s: %s", msg, err)
